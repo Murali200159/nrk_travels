@@ -1,0 +1,799 @@
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronLeft,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  Users,
+  Phone,
+  Camera,
+  Info,
+  Car,
+  ChevronRight,
+  Star,
+  Shield,
+  Calendar,
+  CreditCard,
+  Mail,
+  User,
+  MessageCircle,
+  Pencil,
+  AlertCircle
+} from "lucide-react";
+import { TOURS_DATA, VehicleRate } from "@/lib/tours";
+import Navbar from "@/components/navbar/Navbar";
+import Footer from "@/components/layout/Footer";
+import { cn } from "@/lib/utils";
+
+type BookingStep = "select" | "summary" | "checkout";
+
+const TourDetailsPage = () => {
+  const { slug } = useParams();
+  const tour = TOURS_DATA[slug as string];
+
+  const [bookingStep, setBookingStep] = useState<BookingStep>("select");
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleRate | null>(tour?.vehicleRates[0] || null);
+  const [tripMode, setTripMode] = useState<"one-way" | "round-trip">("one-way");
+  const [activeTab, setActiveTab] = useState<"overview" | "itinerary" | "policy">("overview");
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    requirements: "",
+    gstNumber: "",
+    businessName: "",
+    businessAddress: "",
+    businessEmail: ""
+  });
+  const [paymentOption, setPaymentOption] = useState<"part" | "full">("part");
+  const [hasGst, setHasGst] = useState(false);
+
+  const parsePrice = (priceStr: string) => {
+    return parseInt(priceStr.replace(/,/g, ""), 10) || 0;
+  };
+
+  if (!tour) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <h1 className="text-4xl font-black text-slate-900 mb-4">Tour Not Found</h1>
+        <Link href="/" className="text-emerald-600 font-bold hover:underline">Return to Home</Link>
+      </div>
+    );
+  }
+
+  const handleFinalBooking = () => {
+    const message = `*NRK TRAVELS - NEW BOOKING REQUEST*
+--------------------------------
+*Package:* ${tour.title}
+*Vehicle:* ${selectedVehicle?.model} (${selectedVehicle?.pax} Seats)
+*Trip Mode:* ${tripMode === 'one-way' ? 'One Way' : 'Round Trip'}
+*Total Fare:* ₹${selectedVehicle?.price}
+*Payment Plan:* ${paymentOption === 'part' ? 'Part Pay (30%)' : 'Full Pay'}
+
+*Customer Details:*
+- Name: ${formData.fullName}
+- Phone: ${formData.phone}
+- Email: ${formData.email}
+${formData.requirements ? `- Special Req: ${formData.requirements}` : ''}
+
+--------------------------------
+Please confirm availability and share the payment link.`;
+
+    const whatsappUrl = `https://wa.me/919966363662?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
+  const SummaryList = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <Calendar className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trip Type</p>
+          <p className="text-sm font-black text-slate-900">Tour</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <MapPin className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Distance</p>
+          <p className="text-sm font-black text-slate-900">460 KM</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <MapPin className="w-5 h-5" />
+        </div>
+        <div className="flex-1 flex justify-between items-center">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup</p>
+            <p className="text-sm font-black text-slate-900">Visakhapatnam</p>
+          </div>
+          <button className="text-slate-400 hover:text-emerald-600 transition-colors">
+            <Pencil className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+          <Calendar className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</p>
+          <p className="text-sm font-black text-slate-900 truncate">Fri, May 15, 2026 - 9:15 AM</p>
+        </div>
+        <button className="text-slate-400 hover:text-emerald-600 transition-colors flex-shrink-0">
+          <Pencil className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <main className="min-h-screen bg-slate-50/30">
+      <Navbar />
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pt-24 lg:pt-32 pb-24">
+        <div className="flex flex-col lg:flex-row gap-8">
+
+          {/* Main Content (Left) */}
+          <div className="flex-1 space-y-8">
+            <AnimatePresence mode="wait">
+              {bookingStep !== "checkout" ? (
+                <motion.div
+                  key="tour-details"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-8"
+                >
+                  {/* Header / Hero */}
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 rounded-full bg-emerald-50 text-[10px] font-black text-emerald-600 uppercase tracking-widest">Nature & Adventure</span>
+                      <span className="px-3 py-1 rounded-full bg-slate-100 text-[10px] font-black text-slate-600 uppercase tracking-widest">Easy</span>
+                    </div>
+                    <h1 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">{tour.title}</h1>
+                    <div className="flex items-center gap-6 text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-emerald-500" />
+                        <span className="text-xs font-bold text-slate-600">460 km</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-emerald-500" />
+                        <span className="text-xs font-bold text-slate-600">{tour.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-emerald-500" />
+                        <span className="text-xs font-bold text-slate-600">3D / 2N</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gallery Grid */}
+                  <div className="grid grid-cols-12 gap-3 aspect-[16/9] lg:aspect-[21/9]">
+                    <div className="col-span-8 relative rounded-2xl overflow-hidden border border-slate-200">
+                      <Image src={tour.images[0]} alt={tour.title} fill className="object-cover" />
+                    </div>
+                    <div className="col-span-4 flex flex-col gap-3">
+                      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
+                        <Image src={tour.images[1] || tour.images[0]} alt={tour.title} fill className="object-cover" />
+                      </div>
+                      <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
+                        <Image src={tour.images[2] || tour.images[0]} alt={tour.title} fill className="object-cover" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content Tabs */}
+                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="flex border-b border-slate-100 px-4 lg:px-6 overflow-x-auto scrollbar-hide flex-nowrap">
+                      {[
+                        { id: "overview", label: "Overview" },
+                        { id: "itinerary", label: "Itinerary" },
+                        { id: "policy", label: "Inclusions & Exclusions" }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id as any)}
+                          className={cn(
+                            "px-4 lg:px-6 py-5 text-[10px] lg:text-xs font-black uppercase tracking-widest transition-all relative whitespace-nowrap flex-shrink-0",
+                            activeTab === tab.id ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+                          )}
+                        >
+                          {tab.label}
+                          {activeTab === tab.id && (
+                            <motion.div layoutId="tab-underline" className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-8 lg:p-10">
+                      <AnimatePresence mode="wait">
+                        {activeTab === "overview" && (
+                          <motion.div
+                            key="overview"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-6"
+                          >
+                            <p className="text-lg text-slate-700 font-bold leading-relaxed opacity-90 italic">
+                              "{tour.description}"
+                            </p>
+                            <div className="grid md:grid-cols-2 gap-6 pt-6">
+                              {tour.highlights.map((item, idx) => (
+                                <div key={idx} className="flex items-start gap-4">
+                                  <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5" />
+                                  <span className="text-base font-black text-slate-800">{item}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {activeTab === "itinerary" && (
+                          <motion.div
+                            key="itinerary"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-8"
+                          >
+                            {tour.itinerary && tour.itinerary.length > 0 ? (
+                              <div className="space-y-6">
+                                {tour.itinerary.map((item, idx) => (
+                                  <div key={idx} className="flex gap-6">
+                                    <div className="flex flex-col items-center">
+                                      <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-xs">
+                                        {item.day}
+                                      </div>
+                                      {idx !== tour.itinerary.length - 1 && <div className="w-0.5 flex-1 bg-slate-100 my-2" />}
+                                    </div>
+                                    <div className="pb-8">
+                                      <h4 className="text-base font-black text-slate-900 uppercase tracking-widest mb-4">{item.title}</h4>
+                                      <ul className="space-y-3">
+                                        {item.activities.map((activity, aIdx) => (
+                                          <li key={aIdx} className="flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                                            <span className="text-sm text-slate-500 font-bold leading-relaxed">{activity}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-12">
+                                <p className="text-slate-400 font-bold italic">Detailed itinerary coming soon...</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+
+                        {activeTab === "policy" && (
+                          <motion.div
+                            key="policy"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="grid md:grid-cols-2 gap-12"
+                          >
+                            <div className="space-y-6">
+                              <h4 className="text-emerald-600 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4" /> Included
+                              </h4>
+                              <ul className="space-y-4">
+                                {tour.included.map((item, idx) => (
+                                  <li key={idx} className="flex items-start gap-3">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm font-bold text-slate-700 leading-tight">{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="space-y-6">
+                              <h4 className="text-rose-600 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" /> Not Included
+                              </h4>
+                              <ul className="space-y-4">
+                                {tour.notIncluded.map((item, idx) => (
+                                  <li key={idx} className="flex items-start gap-3">
+                                    <div className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 mt-0.5 flex-shrink-0">
+                                      <span className="text-[10px] font-black">✕</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-700 leading-tight">{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="checkout-form"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  {/* Top Bar */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        Visakhapatnam <ChevronRight className="w-4 h-4 text-slate-300" /> {tour.title}
+                      </h2>
+                      <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+                        {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} - 10:20 PM
+                      </p>
+                    </div>
+                    <button onClick={() => setBookingStep("select")} className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Contact Details */}
+                  <div className="bg-white rounded-3xl p-8 lg:p-10 border border-slate-100 shadow-sm space-y-8">
+                    <div className="flex items-start gap-5">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <User className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Contact details</h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Booking details will be sent to</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="Enter your full name"
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          className="w-full h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
+                        <div className="flex gap-3">
+                          <div className="w-20 lg:w-24 h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-sm font-bold text-slate-900">
+                            IN +91
+                          </div>
+                          <input
+                            type="tel"
+                            placeholder="Enter 10 digit number"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="flex-1 h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email ID</label>
+                        <input
+                          type="email"
+                          placeholder="Enter your email address"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Additional Requirements</label>
+                        <textarea
+                          placeholder="Enter flight number, special requests, or any other requirements..."
+                          value={formData.requirements}
+                          onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                          className="w-full h-32 rounded-2xl bg-slate-50 border border-slate-100 p-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
+                        />
+                        <p className="text-[10px] font-bold text-slate-400 mt-2 italic">Optional: Include flight details, accessibility needs, or any special requests.</p>
+                      </div>
+                    </div>
+
+                    {/* Payment Options */}
+                    <div className="pt-10 border-t border-slate-100 space-y-8">
+                      <div className="flex items-start gap-5">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                          <CreditCard className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-slate-900 tracking-tight">Payment Options</h3>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setPaymentOption("part")}
+                          className={cn(
+                            "w-full p-6 rounded-2xl border-2 transition-all flex items-center justify-between group text-left",
+                            paymentOption === "part" ? "border-emerald-600 bg-emerald-50/20" : "border-slate-100 hover:border-emerald-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all", paymentOption === "part" ? "border-emerald-600 bg-emerald-600" : "border-slate-200")}>
+                              {paymentOption === "part" && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-900">Part Pay</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pay 30% now, rest to the driver</p>
+                            </div>
+                          </div>
+                          <p className="text-lg font-black text-slate-900">₹{Math.round(parsePrice(selectedVehicle?.price || "0") * 0.3).toLocaleString('en-IN')}</p>
+                        </button>
+
+                        <button
+                          onClick={() => setPaymentOption("full")}
+                          className={cn(
+                            "w-full p-6 rounded-2xl border-2 transition-all flex items-center justify-between group text-left",
+                            paymentOption === "full" ? "border-emerald-600 bg-emerald-50/20" : "border-slate-100 hover:border-emerald-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all", paymentOption === "full" ? "border-emerald-600 bg-emerald-600" : "border-slate-200")}>
+                              {paymentOption === "full" && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-900">Full Pay</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pay total amount</p>
+                            </div>
+                          </div>
+                          <p className="text-lg font-black text-slate-900">₹{selectedVehicle?.price}</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* GST Section */}
+                    <div className="pt-10 border-t border-slate-100 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">I have a GST number</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Optional</p>
+                        </div>
+                        <button
+                          onClick={() => setHasGst(!hasGst)}
+                          className={cn(
+                            "w-12 h-6 rounded-full transition-all relative flex items-center px-1",
+                            hasGst ? "bg-emerald-600" : "bg-slate-200"
+                          )}
+                        >
+                          <div className={cn("w-4 h-4 rounded-full bg-white transition-all shadow-sm", hasGst ? "translate-x-6" : "translate-x-0")} />
+                        </button>
+                      </div>
+
+                      <AnimatePresence>
+                        {hasGst && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                              <input
+                                type="text"
+                                placeholder="GSTIN"
+                                value={formData.gstNumber}
+                                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                                className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Business Name"
+                                value={formData.businessName}
+                                onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                                className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Business Address"
+                                value={formData.businessAddress}
+                                onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
+                                className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all md:col-span-2"
+                              />
+                              <input
+                                type="email"
+                                placeholder="Business Email"
+                                value={formData.businessEmail}
+                                onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
+                                className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all md:col-span-2"
+                              />
+                              <div className="md:col-span-2 bg-orange-50/50 border border-orange-100 p-4 rounded-xl">
+                                <p className="text-[10px] font-bold text-orange-800 leading-relaxed">
+                                  In case of invalid/cancelled GSTIN, this booking shall be considered as personal booking. Additional 18% GST will be charged on the total amount.
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="pt-10 border-t border-slate-100 space-y-6">
+                      <p className="text-[10px] font-bold text-slate-400 leading-relaxed text-center">
+                        By proceeding to book, I agree to Vizag Taxi Hub's <Link href="#" className="text-emerald-600 hover:underline">Privacy Policy</Link>, <Link href="#" className="text-emerald-600 hover:underline">Terms of Service</Link>, <Link href="#" className="text-emerald-600 hover:underline">User Agreement</Link> & <Link href="#" className="text-emerald-600 hover:underline">Cancellation Rules</Link>
+                      </p>
+
+                      <div className="space-y-4">
+                        <button
+                          onClick={() => {
+                            if (formData.fullName && formData.phone && formData.email) {
+                              handleFinalBooking();
+                            }
+                          }}
+                          className={cn(
+                            "w-full h-16 rounded-2xl flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest transition-all shadow-xl",
+                            (formData.fullName && formData.phone && formData.email)
+                              ? "bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700"
+                              : "bg-emerald-50 text-emerald-600/40 cursor-not-allowed border border-emerald-100"
+                          )}
+                        >
+                          <CreditCard className="w-5 h-5" />
+                          Proceed to Payment - ₹{paymentOption === "part" ? Math.round(parsePrice(selectedVehicle?.price || "0") * 0.3).toLocaleString('en-IN') : selectedVehicle?.price}
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => setBookingStep("summary")}
+                          className="w-full h-16 rounded-2xl border-2 border-slate-100 text-slate-900 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-center gap-2 transition-all"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Back
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Sidebar (Right) */}
+          <div className="lg:w-[400px]">
+            <div className="sticky top-32 space-y-6">
+              <AnimatePresence mode="wait">
+                {bookingStep === "select" && (
+                  <motion.div
+                    key="step-select"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">Select Vehicle</h3>
+                      <Car className="w-5 h-5 text-emerald-600" />
+                    </div>
+
+                    <div className="space-y-3">
+                      {tour.vehicleRates.map((vehicle, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedVehicle(vehicle);
+                            setBookingStep("summary");
+                          }}
+                          className={cn(
+                            "w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between group",
+                            selectedVehicle?.model === vehicle.model
+                              ? "border-emerald-600 bg-emerald-50/20"
+                              : "border-slate-100 hover:border-emerald-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-slate-100 relative">
+                              <Image src={vehicle.image} alt={vehicle.model} fill className="object-cover" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-sm font-black text-slate-900">{vehicle.model}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase">{vehicle.pax} Seats</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-black text-slate-900 tracking-tight">₹{vehicle.price}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {(bookingStep === "summary" || bookingStep === "checkout") && (
+                  <motion.div
+                    key="step-summary"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    {/* Trip Mode */}
+                    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Trip Mode</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button onClick={() => setTripMode("one-way")} className={cn("p-4 rounded-xl border-2 transition-all text-center", tripMode === "one-way" ? "border-emerald-600 bg-emerald-50/50" : "border-slate-100")}>
+                          <p className={cn("text-xs font-black", tripMode === "one-way" ? "text-emerald-600" : "text-slate-900")}>One Way</p>
+                        </button>
+                        <button onClick={() => setTripMode("round-trip")} className={cn("p-4 rounded-xl border-2 transition-all text-center", tripMode === "round-trip" ? "border-emerald-600 bg-emerald-50/50" : "border-slate-100")}>
+                          <p className={cn("text-xs font-black", tripMode === "round-trip" ? "text-emerald-600" : "text-slate-900")}>Round Trip</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-8">
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Booking Summary</h4>
+                      <SummaryList />
+
+                      <div className="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-white border border-emerald-100 overflow-hidden relative">
+                          <Image src={selectedVehicle?.image || ""} alt={selectedVehicle?.model || ""} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-black text-slate-900">{selectedVehicle?.model}</p>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest"><Users className="w-2.5 h-2.5" /> {selectedVehicle?.pax} Seats</span>
+                            <span className="flex items-center gap-1 text-[9px] font-black text-emerald-600 uppercase tracking-widest"><CheckCircle2 className="w-2.5 h-2.5" /> AC</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-slate-100 space-y-6">
+                        {/* Fare Breakdown */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Base fare</span>
+                            <span className="text-sm font-black text-slate-900 tracking-tight">₹{selectedVehicle?.price}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-3 border-t border-slate-100/50">
+                            <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Total Price</span>
+                            <span className="text-2xl font-black text-slate-900 tracking-tight">₹{selectedVehicle?.price}</span>
+                          </div>
+                        </div>
+
+                        {/* Actions & Notes */}
+                        <div className="space-y-4">
+                          <button className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-600 transition-all w-fit">
+                            <MessageCircle className="w-4 h-4" />
+                            Share summary on WhatsApp
+                          </button>
+                          <p className="text-[10px] font-bold text-slate-400 italic">Parking and tolls fees are extra.</p>
+                        </div>
+
+                        {/* Inclusions / Exclusions Box */}
+                        <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Inclusions/Exclusions</h5>
+                            <button
+                              onClick={() => setActiveTab("policy")}
+                              className="text-emerald-600 text-[10px] font-black uppercase hover:underline"
+                            >
+                              View Policy
+                            </button>
+                          </div>
+                          <ul className="space-y-3">
+                            {[
+                              "Toll charges, Parking, State Tax & Driver Allowance are excluded",
+                              "Only one pickup and drop",
+                              "Waiting time upto 45 mins included. ₹100.00/30 mins after that",
+                              "During ghat roads and standby AC will turned off"
+                            ].map((item, i) => (
+                              <li key={i} className="flex items-start gap-3">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                <span className="text-[11px] font-bold text-slate-600 leading-relaxed">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="flex gap-3 pt-4">
+                          <button
+                            onClick={() => setBookingStep(bookingStep === "checkout" ? "summary" : "select")}
+                            className="flex-1 h-14 rounded-2xl border-2 border-slate-100 text-slate-900 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-center gap-2 transition-all"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            {bookingStep === "checkout" ? "Back to Summary" : "Back to Vehicles"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (bookingStep === "checkout") {
+                                handleFinalBooking();
+                              } else {
+                                setBookingStep("checkout");
+                              }
+                            }}
+                            className="flex-1 h-14 rounded-2xl bg-emerald-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 transition-all"
+                          >
+                            {bookingStep === "checkout" ? "Confirm Booking" : "Book Now"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Booking Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 z-50 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-lg bg-white/90">
+        <div className="flex flex-col">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Price</p>
+          <p className="text-xl font-black text-emerald-600 tracking-tight">₹{selectedVehicle?.price}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.open(`https://wa.me/919966363662`, "_blank")}
+            className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+          >
+            <MessageCircle className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => {
+              if (formData.fullName && formData.phone && formData.email) {
+                if (bookingStep === "checkout") {
+                  handleFinalBooking();
+                } else if (bookingStep === "summary") {
+                  setBookingStep("checkout");
+                } else {
+                  setBookingStep("summary");
+                }
+              }
+            }}
+            className={cn(
+              "px-8 h-12 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95",
+              (formData.fullName && formData.phone && formData.email) || bookingStep !== "checkout"
+                ? "bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700"
+                : "bg-emerald-50 text-emerald-600/40 cursor-not-allowed border border-emerald-100"
+            )}
+          >
+            {bookingStep === "checkout" ? "Confirm" : "Book Now"}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation (Always Visible) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-100 flex items-center justify-around z-[60] px-4 pb-safe shadow-2xl hidden">
+        <Link href="/" className="flex flex-col items-center gap-1 text-slate-400">
+          <motion.div whileTap={{ scale: 0.9 }}><Car className="w-6 h-6" /></motion.div>
+          <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+        </Link>
+        <button className="flex flex-col items-center gap-1 text-emerald-600">
+          <motion.div whileTap={{ scale: 0.9 }}><MessageCircle className="w-6 h-6" /></motion.div>
+          <span className="text-[8px] font-black uppercase tracking-widest">WhatsApp</span>
+        </button>
+        <button className="flex flex-col items-center gap-1 text-slate-400">
+          <motion.div whileTap={{ scale: 0.9 }}><Phone className="w-6 h-6" /></motion.div>
+          <span className="text-[8px] font-black uppercase tracking-widest">Call</span>
+        </button>
+        <button className="flex flex-col items-center gap-1 text-slate-400">
+          <motion.div whileTap={{ scale: 0.9 }}><User className="w-6 h-6" /></motion.div>
+          <span className="text-[8px] font-black uppercase tracking-widest">Account</span>
+        </button>
+      </div>
+
+      <div className="h-32 lg:hidden" /> {/* Increased spacer for sticky bar */}
+      <Footer />
+    </main>
+  );
+};
+
+export default TourDetailsPage;

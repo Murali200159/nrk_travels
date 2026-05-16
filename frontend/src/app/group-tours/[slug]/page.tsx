@@ -1,0 +1,885 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  MapPin, Clock, Calendar, CheckCircle2,
+  AlertCircle, ChevronRight, ChevronLeft,
+  Users, Info, ShieldCheck, Share2,
+  Camera, ArrowLeft, MessageCircle,
+  Phone, User, CreditCard, Star,
+  Zap, Ticket, Car
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { GROUP_TOURS_DATA, GroupTour } from "@/lib/tours";
+import Footer from "@/components/layout/Footer";
+
+const GroupTourDetailsPage = () => {
+  const params = useParams();
+  const slug = params.slug as string;
+  const tour = GROUP_TOURS_DATA[slug];
+
+  const [activeTab, setActiveTab] = useState<"overview" | "itinerary" | "highlights" | "included">("overview");
+  const [policyTab, setPolicyTab] = useState<"cancellation" | "vehicle" | "other">("cancellation");
+  const [bookingStep, setBookingStep] = useState<"details" | "seats" | "checkout">("details");
+  const [selectedSeats, setSelectedSeats] = useState<Record<number, string>>({});
+  const [gender, setGender] = useState<string>("male");
+
+  const BOOKED_SEATS = [4, 7, 10];
+  const RESERVED_SEATS = [12, 15];
+
+  const toggleSeat = (id: number) => {
+    if (BOOKED_SEATS.includes(id) || RESERVED_SEATS.includes(id)) return;
+    
+    setSelectedSeats(prev => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        next[id] = gender || "male";
+      }
+      return next;
+    });
+  };
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      // If we're moving back, we don't want to push a new state, 
+      // just update the current internal state
+      if (e.state?.step) {
+        setBookingStep(e.state.step);
+      } else {
+        setBookingStep("details");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Update history only when moving forward
+  const changeStep = (newStep: "details" | "seats" | "checkout") => {
+    window.history.pushState({ step: newStep }, "");
+    setBookingStep(newStep);
+  };
+
+  const farePerSeat = parseInt(tour.fare.replace(/[^0-9]/g, ""));
+  const totalFare = Object.keys(selectedSeats).length * farePerSeat;
+
+  if (!tour) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <h2 className="text-2xl font-black text-slate-900 mb-4">Group Tour Not Found</h2>
+        <Link href="/" className="text-emerald-600 font-bold hover:underline">Return to Home</Link>
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-50/50 pt-28 lg:pt-32">
+      {/* Search Route Bar */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 mb-8">
+        <div className="bg-white border border-slate-100 rounded-[2rem] px-6 py-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Route Information</h2>
+              <p className="text-[11px] font-bold text-slate-900 mt-0.5">
+                {tour.pickup} • {new Date(tour.journeyDate).toLocaleDateString('en-IN', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-')}
+              </p>
+            </div>
+          </div>
+          <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors">
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 pb-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          {bookingStep === "details" ? (
+            <>
+              {/* Main Content (Left) */}
+              <div className="flex-1 space-y-8">
+
+                {/* Gallery Grid */}
+                <div className="grid grid-cols-12 gap-3 aspect-[16/9] lg:aspect-[21/10]">
+                  <div className="col-span-8 relative rounded-[2rem] overflow-hidden border border-slate-200">
+                    <Image src={tour.images[0]} alt={tour.title} fill className="object-cover" />
+                    <div className="absolute top-6 left-6 bg-emerald-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-2xl uppercase tracking-widest flex items-center gap-2 backdrop-blur-md bg-emerald-600/90">
+                      <Camera className="w-3.5 h-3.5" />
+                      1 / {tour.images.length}
+                    </div>
+                  </div>
+                  <div className="col-span-4 flex flex-col gap-3">
+                    <div className="flex-1 relative rounded-[2rem] overflow-hidden border border-slate-200">
+                      <Image src={tour.images[1]} alt={tour.title} fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 relative rounded-[2rem] overflow-hidden border border-slate-200">
+                      <Image src={tour.images[2]} alt={tour.title} fill className="object-cover" />
+                      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white cursor-pointer hover:bg-slate-900/50 transition-all">
+                        <Camera className="w-6 h-6 mb-2" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">View All Images</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tour Title & Badges */}
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">{tour.title}</h1>
+                    <div className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-2 border border-emerald-100">
+                      <Zap className="w-3.5 h-3.5" />
+                      Save up to 60%
+                    </div>
+                  </div>
+
+                  {/* Quick Info Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-500" /> Pickup Point
+                      </p>
+                      <p className="text-sm font-black text-slate-900">Akkayapalem</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-emerald-500" /> Journey Date
+                      </p>
+                      <p className="text-sm font-black text-slate-900">{new Date(tour.journeyDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Ticket className="w-3.5 h-3.5 text-emerald-500" /> Fare Starts
+                      </p>
+                      <p className="text-sm font-black text-slate-900">₹{tour.fare} / seat</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-emerald-500" /> Timing
+                      </p>
+                      <p className="text-sm font-black text-slate-900">05:30 AM - 08:30 PM</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Tabs */}
+                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="flex border-b border-slate-100 px-6 lg:px-8 overflow-x-auto scrollbar-hide flex-nowrap">
+                    {[
+                      { id: "overview", label: "Overview" },
+                      { id: "itinerary", label: "Itinerary" },
+                      { id: "highlights", label: "Highlights" },
+                      { id: "included", label: "What's Included" }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={cn(
+                          "px-6 py-6 text-[10px] lg:text-xs font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap flex-shrink-0",
+                          activeTab === tab.id ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+                        )}
+                      >
+                        {tab.label}
+                        {activeTab === tab.id && (
+                          <motion.div layoutId="tab-underline-group" className="absolute bottom-0 left-0 w-full h-1 bg-emerald-600 rounded-t-full" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="p-8 lg:p-12">
+                    <AnimatePresence mode="wait">
+                      {activeTab === "overview" && (
+                        <motion.div
+                          key="overview"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="space-y-10"
+                        >
+                          <div className="flex flex-wrap gap-8">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                <Car className="w-5 h-5" />
+                              </div>
+                              <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest">Transfer Included</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                <Camera className="w-5 h-5" />
+                              </div>
+                              <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest">Sightseeing Included</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                <MapPin className="w-5 h-5" />
+                              </div>
+                              <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest">Pickup Included</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                <MapPin className="w-5 h-5" />
+                              </div>
+                              <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest">Drop Included</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                            <Users className="w-5 h-5 text-emerald-600" />
+                            <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">
+                              {tour.availableSeats} seats available • Group tour by {tour.vehicleType}
+                            </p>
+                          </div>
+
+                          <p className="text-lg text-slate-600 font-bold leading-relaxed opacity-90 italic">
+                            "{tour.description}"
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {activeTab === "itinerary" && (
+                        <motion.div
+                          key="itinerary"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="space-y-12"
+                        >
+                          {tour.itinerary.map((item, idx) => (
+                            <div key={idx} className="flex gap-8">
+                              <div className="flex flex-col items-center">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white font-black text-xs shadow-xl shadow-emerald-600/20">
+                                  DAY {item.day}
+                                </div>
+                                {idx !== tour.itinerary.length - 1 && <div className="w-1 flex-1 bg-emerald-50 rounded-full my-4" />}
+                              </div>
+                              <div className="pb-12 space-y-6 flex-1">
+                                <h4 className="text-xl font-black text-slate-900 tracking-tight uppercase">{item.title}</h4>
+                                <div className="grid gap-4">
+                                  {item.activities.map((activity, aIdx) => (
+                                    <div key={aIdx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100/50">
+                                      <div className="w-2 h-2 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                                      <span className="text-sm text-slate-600 font-bold leading-relaxed">{activity}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+
+                      {activeTab === "highlights" && (
+                        <motion.div
+                          key="highlights"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="grid md:grid-cols-2 gap-6"
+                        >
+                          {tour.highlights.map((highlight, idx) => (
+                            <div key={idx} className="flex items-start gap-5 p-6 rounded-3xl bg-slate-50/50 border border-slate-100/50 group hover:bg-white hover:border-emerald-100 hover:shadow-xl hover:shadow-emerald-600/5 transition-all">
+                              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                <CheckCircle2 className="w-6 h-6" />
+                              </div>
+                              <span className="text-base font-black text-slate-800 tracking-tight">{highlight}</span>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+
+                      {activeTab === "included" && (
+                        <motion.div
+                          key="included"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="grid md:grid-cols-2 gap-12"
+                        >
+                          <div className="space-y-8">
+                            <h4 className="text-emerald-600 font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3">
+                              <CheckCircle2 className="w-5 h-5" /> What's Included
+                            </h4>
+                            <ul className="space-y-4">
+                              {tour.included.map((item, idx) => (
+                                <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-emerald-50/30 transition-colors">
+                                  <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0 mt-0.5">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  </div>
+                                  <span className="text-sm font-bold text-slate-700 leading-relaxed">{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="space-y-8">
+                            <h4 className="text-rose-600 font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3">
+                              <AlertCircle className="w-5 h-5" /> Not Included
+                            </h4>
+                            <ul className="space-y-4">
+                              {tour.notIncluded.map((item, idx) => (
+                                <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-rose-50/30 transition-colors">
+                                  <div className="w-6 h-6 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0 mt-0.5">
+                                    <span className="text-[10px] font-black">✕</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-slate-700 leading-relaxed">{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Vehicle & Booking Policy */}
+                <div className="bg-white rounded-[2.5rem] p-10 lg:p-12 border border-slate-100 shadow-sm space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-emerald-600">
+                      <Info className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Vehicle & Booking Policy</h3>
+                  </div>
+                  <div className="space-y-6">
+                    <p className="text-sm font-bold text-slate-500 leading-relaxed">
+                      We assign vehicles based on confirmed passengers:
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {[
+                        { count: "10-17", vehicle: "Tempo Traveller" },
+                        { count: "7", vehicle: "Innova Crysta" },
+                        { count: "5-6", vehicle: "Ertiga" },
+                        { count: "1-4", vehicle: "Sedan" }
+                      ].map((policy, idx) => (
+                        <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 border border-slate-100">
+                          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <span className="text-sm font-black text-slate-800">{policy.count} Passengers:</span>
+                          <span className="text-sm font-bold text-slate-600">{policy.vehicle}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl space-y-3">
+                      <p className="text-sm font-black text-orange-900 leading-relaxed">
+                        Minimum 4 bookings required.
+                      </p>
+                      <p className="text-xs font-bold text-orange-800 leading-relaxed opacity-80">
+                        If fewer than 4 bookings are confirmed 24h before departure, we'll contact you. Choose from: full refund, reschedule, or upgrade to a private tour.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar (Right) */}
+              <div className="lg:w-[400px]">
+                <div className="sticky top-32 space-y-8">
+                  <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8 overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/10 transition-all" />
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 text-emerald-500" /> Exclusive Price
+                      </p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-5xl font-black text-slate-900 tracking-tight">₹{tour.fare}</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">/ per seat</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setBookingStep("seats")}
+                      className="w-full py-6 rounded-2xl bg-emerald-600 text-white text-sm font-black uppercase tracking-[0.2em] hover:bg-emerald-700 shadow-2xl shadow-emerald-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group/btn"
+                    >
+                      <Users className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+                      Select Seats
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <div className="space-y-6 pt-4">
+                      <div className="flex items-center gap-4 text-slate-500 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                        <span className="text-xs font-bold uppercase tracking-widest">Secure Booking Guarantee</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-slate-500 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+                        <Clock className="w-5 h-5 text-emerald-500" />
+                        <span className="text-xs font-bold uppercase tracking-widest">Instant Confirmation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : bookingStep === "seats" ? (
+            <div className="w-full space-y-8">
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* Seat Map (Left) */}
+                <div className="flex-1 space-y-8">
+                  <button 
+                    onClick={() => setBookingStep("details")}
+                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center group-hover:border-emerald-200 transition-all">
+                      <ChevronLeft className="w-4 h-4" />
+                    </div>
+                    Back to Tour Details
+                  </button>
+
+                  <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm space-y-8">
+                    <div className="flex flex-col md:flex-row justify-between gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your gender (for female-only seats)</label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full md:w-64 h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        >
+                          <option value="">Select</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-wrap gap-4 items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-emerald-500" />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-rose-400" />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Female only</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-blue-600" />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-slate-200" />
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Booked</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Seat Grid Layout */}
+                    <div className="bg-slate-50 rounded-[3rem] p-12 flex flex-col items-center border border-slate-100 max-w-2xl mx-auto">
+                      <div className="mb-12">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-800 flex flex-col items-center justify-center text-white shadow-xl">
+                          <User className="w-6 h-6" />
+                          <span className="text-[8px] font-black uppercase mt-1">Driver</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex justify-center">
+                          <SeatButton 
+                            id={1} 
+                            status={BOOKED_SEATS.includes(1) ? "booked" : RESERVED_SEATS.includes(1) ? "reserved" : !!selectedSeats[1] ? "selected" : "available"}
+                            onClick={() => toggleSeat(1)} 
+                            price={tour.fare} 
+                            gender={selectedSeats[1] || gender}
+                          />
+                        </div>
+                        {/* Remaining Grid (4 seats per row) */}
+                        <div className="grid grid-cols-4 gap-6">
+                          {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].map(id => (
+                            <SeatButton 
+                              key={id} 
+                              id={id} 
+                              status={BOOKED_SEATS.includes(id) ? "booked" : RESERVED_SEATS.includes(id) ? "reserved" : !!selectedSeats[id] ? "selected" : "available"}
+                              onClick={() => toggleSeat(id)} 
+                              price={tour.fare} 
+                              gender={selectedSeats[id] || gender}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Booking Summary Sidebar (Right) */}
+                <div className="lg:w-[400px] space-y-6">
+                  <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Booking Summary</h3>
+
+                    <div className="space-y-6">
+                      <div className="flex gap-4">
+                        <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <p className="text-xs font-bold text-slate-600 leading-relaxed">{tour.pickup}</p>
+                      </div>
+                      <div className="flex gap-4">
+                        <Calendar className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <p className="text-xs font-bold text-slate-600">{new Date(tour.journeyDate).toDateString()}</p>
+                      </div>
+                      <div className="flex gap-4">
+                        <Clock className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <p className="text-xs font-bold text-slate-600">Boarding: NAD (05:30)</p>
+                      </div>
+                      <div className="flex gap-4">
+                        <Users className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <p className="text-xs font-bold text-slate-600">
+                          Seats: {Object.keys(selectedSeats).length > 0 ? Object.keys(selectedSeats).sort((a, b) => Number(a) - Number(b)).join(", ") : "None selected"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-8 border-t border-slate-50 flex items-center justify-between">
+                      <span className="text-xl font-black text-slate-900 uppercase tracking-tighter">Total</span>
+                      <span className="text-2xl font-black text-slate-900">₹{totalFare.toLocaleString('en-IN')}</span>
+                    </div>
+
+                    <button
+                      disabled={Object.keys(selectedSeats).length === 0}
+                      onClick={() => changeStep("checkout")}
+                      className={cn(
+                        "w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl",
+                        Object.keys(selectedSeats).length > 0
+                          ? "bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700"
+                          : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      )}
+                    >
+                      Confirm Booking
+                    </button>
+                  </div>
+
+                  <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
+                    <div className="flex items-center gap-4 text-slate-500">
+                      <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Secure Booking</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-slate-500">
+                      <Clock className="w-5 h-5 text-emerald-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Instant Confirmation</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cancellation Policy Section */}
+              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="flex border-b border-slate-100 px-8">
+                  {[
+                    { id: "cancellation", label: "Cancellation", icon: Ticket },
+                    { id: "vehicle", label: "Vehicle & Booking", icon: Info },
+                    { id: "other", label: "Other", icon: ShieldCheck }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setPolicyTab(tab.id as any)}
+                      className={cn(
+                        "px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-2",
+                        policyTab === tab.id ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+                      )}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                      {policyTab === tab.id && (
+                        <motion.div layoutId="policy-underline" className="absolute bottom-0 left-0 w-full h-1 bg-emerald-600 rounded-t-full" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-8 lg:p-12">
+                  {policyTab === "cancellation" && (
+                    <div className="space-y-8">
+                      <h4 className="text-xl font-black text-slate-900 uppercase">Cancellation policy</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs font-bold text-slate-600">
+                          <thead className="border-b border-slate-100 text-[10px] uppercase tracking-widest text-slate-400">
+                            <tr>
+                              <th className="pb-4">Time before travel</th>
+                              <th className="pb-4">Deduction</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            <tr><td className="py-4">More than 24 hours</td><td className="py-4">15% of seat fare</td></tr>
+                            <tr><td className="py-4">12-24 hours before departure</td><td className="py-4">20% of seat fare</td></tr>
+                            <tr><td className="py-4">6-12 hours before departure</td><td className="py-4">50% of seat fare</td></tr>
+                            <tr><td className="py-4">Less than 6 hours</td><td className="py-4 text-rose-500">100% (no refund)</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <ul className="space-y-3 text-[11px] text-slate-500 font-bold list-disc pl-4 opacity-75">
+                        <li>Cancellation charges are computed on a per-seat basis.</li>
+                        <li>Ticket cannot be cancelled after scheduled departure from the first boarding point.</li>
+                        <li>For group bookings, individual seats can be cancelled.</li>
+                      </ul>
+                    </div>
+                  )}
+                  {policyTab === "vehicle" && (
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-black text-slate-900 uppercase">Vehicle Information</h4>
+                      <p className="text-sm font-bold text-slate-500 leading-relaxed max-w-2xl">
+                        We prioritize passenger comfort. If the minimum booking requirement is met, a Tempo Traveller or Urbania will be deployed. For smaller groups, high-end SUVs like Innova Crysta or Ertiga will be assigned.
+                      </p>
+                    </div>
+                  )}
+                  {policyTab === "other" && (
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-black text-slate-900 uppercase">Other Rules</h4>
+                      <p className="text-sm font-bold text-slate-500 leading-relaxed max-w-2xl">
+                        Please carry a valid ID proof. Report to the boarding point 15 minutes before scheduled time. Alcohol and smoking are strictly prohibited inside the vehicle.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Need Help Card */}
+              <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white space-y-6 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-full bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <h4 className="text-xl font-black tracking-tight relative">Need help with booking?</h4>
+                <p className="text-sm font-bold text-slate-400 leading-relaxed relative">
+                  Our travel experts are available 24/7 to help you plan your spiritual journey.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 relative">
+                  <a href="tel:+919966363662" className="flex-1 flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold">+91 9966363662</span>
+                  </a>
+                  <a href="https://wa.me/919966363662" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold">Chat on WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <button 
+                onClick={() => setBookingStep("seats")}
+                className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center group-hover:border-emerald-200 transition-all">
+                  <ChevronLeft className="w-4 h-4" />
+                </div>
+                Back to Seat Selection
+              </button>
+
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* Passenger Forms (Left) */}
+                <div className="flex-1 space-y-6">
+                  <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-4 mb-10">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-emerald-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 uppercase">Passenger Information</h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Enter details for {Object.keys(selectedSeats).length} travelers</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-12">
+                      {Object.keys(selectedSeats).sort((a,b) => Number(a)-Number(b)).map((seatId, index) => (
+                        <div key={seatId} className="relative pt-8 border-t border-slate-50 first:border-0 first:pt-0">
+                          <div className="absolute -top-3 left-0 px-4 py-1 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+                            Seat S{seatId} — {selectedSeats[Number(seatId)]}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
+                              <input 
+                                type="text" 
+                                placeholder="Enter name"
+                                className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Age</label>
+                              <input 
+                                type="number" 
+                                placeholder="Age"
+                                className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gender</label>
+                              <select className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                <option value={selectedSeats[Number(seatId)]}>{selectedSeats[Number(seatId)] === 'female' ? 'Female' : 'Male'}</option>
+                                <option value={selectedSeats[Number(seatId)] === 'female' ? 'male' : 'female'}>{selectedSeats[Number(seatId)] === 'female' ? 'Male' : 'Female'}</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 uppercase">Contact Details</h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">For booking confirmation</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone Number</label>
+                        <input 
+                          type="tel" 
+                          placeholder="+91"
+                          className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+                        <input 
+                          type="email" 
+                          placeholder="example@gmail.com"
+                          className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 uppercase">Terms & Conditions</h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Please review before proceeding</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          "Valid ID proof (Aadhar/Voter ID) is mandatory for all travelers.",
+                          "Reporting time is 15 minutes before the scheduled boarding.",
+                          "Refunds for cancellations will be processed within 5-7 working days.",
+                          "Management is not responsible for loss of personal belongings."
+                        ].map((term, i) => (
+                          <div key={i} className="flex gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <p className="text-[10px] font-bold text-slate-600 leading-relaxed uppercase tracking-tight">{term}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <label className="flex items-start gap-4 p-6 rounded-2xl bg-emerald-50 border border-emerald-100 cursor-pointer group hover:bg-emerald-100/50 transition-all">
+                        <div className="relative flex items-center">
+                          <input type="checkbox" className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-emerald-300 bg-white checked:bg-emerald-600 transition-all" defaultChecked />
+                          <CheckCircle2 className="absolute h-5 w-5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none p-0.5" />
+                        </div>
+                        <span className="text-xs font-bold text-emerald-900 leading-tight">
+                          I agree to the <span className="underline decoration-2 underline-offset-4">Terms of Service</span>, <span className="underline decoration-2 underline-offset-4">Cancellation Policy</span>, and <span className="underline decoration-2 underline-offset-4">Privacy Policy</span>.
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Final Summary (Right) */}
+                <div className="lg:w-[400px] space-y-6">
+                  <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white space-y-8 sticky top-32">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-emerald-400">Final Summary</h3>
+                    
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center pb-6 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Base Fare</span>
+                        <span className="text-sm font-bold">₹{farePerSeat} × {Object.keys(selectedSeats).length}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-6 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">GST (5%)</span>
+                        <span className="text-sm font-bold text-emerald-400">Included</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-black uppercase tracking-tighter">Total Amount</span>
+                        <span className="text-3xl font-black text-emerald-400">₹{totalFare.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      className="w-full h-16 rounded-2xl bg-emerald-500 text-slate-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3"
+                    >
+                      Proceed to Payment <ChevronRight className="w-4 h-4" />
+                    </button>
+                    
+                    <p className="text-[9px] text-center font-bold text-white/30 uppercase tracking-widest leading-relaxed">
+                      By clicking proceed, you agree to our <br/> Terms & Cancellation Policy
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Sticky CTA */}
+      {bookingStep === "details" && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-4 z-[200] flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-lg bg-white/95">
+          <div className="flex flex-col">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Starting from</p>
+            <p className="text-xl font-black text-slate-900 tracking-tight">₹{tour.fare} <span className="text-[10px] text-slate-400">/ seat</span></p>
+          </div>
+          <button
+            onClick={() => changeStep("seats")}
+            className="px-10 h-14 rounded-2xl bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.2em] hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 active:scale-95 transition-all"
+          >
+            Select Seats
+          </button>
+        </div>
+      )}
+
+      <Footer />
+      <div className="h-24 lg:hidden" />
+    </main>
+  );
+};
+
+interface SeatButtonProps {
+  id: number;
+  status: "available" | "selected" | "booked" | "reserved";
+  onClick: () => void;
+  price: string;
+  gender: string;
+}
+
+const SeatButton: React.FC<SeatButtonProps> = ({ id, status, onClick, price, gender }) => (
+  <button
+    onClick={onClick}
+    disabled={status === "booked" || status === "reserved"}
+    className={cn(
+      "w-12 h-14 rounded-xl border-2 transition-all flex flex-col items-center justify-center relative group active:scale-90",
+      status === "selected"
+        ? gender === "female"
+          ? "bg-[#e11d48] border-[#be123c] text-white shadow-lg shadow-rose-600/20"
+          : "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20"
+        : status === "booked"
+          ? "bg-[#94a3b8] border-[#64748b] text-white cursor-not-allowed opacity-60"
+          : status === "reserved"
+            ? "bg-[#f59e0b] border-[#d97706] text-white cursor-not-allowed"
+            : "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
+    )}
+  >
+    <span className="text-[9px] font-black uppercase">S{id}</span>
+    <span className="text-[7px] font-bold opacity-80">₹{price}</span>
+    {status === "selected" && (
+      <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
+        <div className={cn(
+          "w-2 h-2 rounded-full",
+          gender === "female" ? "bg-rose-600" : "bg-blue-600"
+        )} />
+      </div>
+    )}
+  </button>
+);
+
+export default GroupTourDetailsPage;

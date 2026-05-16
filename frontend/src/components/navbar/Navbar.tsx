@@ -2,7 +2,6 @@
  * =========================================
  * Navbar Component
  * Responsive premium navigation bar
- * Includes desktop links and mobile toggle
  * =========================================
  */
 
@@ -11,14 +10,38 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Phone, ChevronDown, Car } from "lucide-react";
+import { Menu, Phone, ChevronDown, Car, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import MobileMenu from "./MobileMenu";
+import MegaMenu from "./MegaMenu";
+import TourMegaMenu from "./TourMegaMenu";
+import SimpleDropdown from "./SimpleDropdown";
+
+import { ROUTES, NAV_LINKS, COMPANY_LINKS, SUPPORT_LINKS } from "@/lib/navigation";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeMegaMenu, setActiveMegaMenu] = useState<string | null>(null);
+
+  const toggleMenu = (e: React.MouseEvent, menuName: string) => {
+    e.preventDefault();
+    setActiveMegaMenu(activeMegaMenu === menuName ? null : menuName);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeMegaMenu) {
+        const nav = document.querySelector("nav");
+        if (nav && !nav.contains(event.target as Node)) {
+          setActiveMegaMenu(null);
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activeMegaMenu]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,100 +51,143 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: "Services", href: "#", hasDropdown: true },
-    { name: "Tour Packages", href: "#", hasDropdown: true },
-    { name: "Company", href: "#", hasDropdown: true },
-    { name: "Support", href: "#", hasDropdown: true },
-    { name: "Hire Driver", href: "#" },
-  ];
-
   return (
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-4",
-          isScrolled 
-            ? "bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-100 py-3" 
-            : "bg-transparent"
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out px-4 md:px-10",
+          isScrolled ? "py-4" : "py-8"
         )}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform">
-              <Car className="w-6 h-6" />
+        <div className={cn(
+          "max-w-[100%] mx-auto flex items-center justify-between px-6 py-2.5 rounded-[2rem] transition-all duration-700 ease-in-out",
+          isScrolled
+            ? "bg-white/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white/50"
+            : "bg-transparent"
+        )}>
+          {/* Logo */}
+          <Link href={ROUTES.HOME} className="flex items-center gap-3 group">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 group-hover:rotate-[360deg] transition-all duration-1000">
+                <Car className="w-6 h-6" />
+              </div>
+              <Sparkles className="absolute -top-2 -right-2 w-4 h-4 text-orange-500 animate-pulse" />
             </div>
             <div className="flex flex-col">
+              <div className="flex items-baseline gap-1">
+                <span className={cn(
+                  "text-2xl font-display font-black tracking-tighter leading-none transition-colors duration-500",
+                  "text-emerald-600"
+                )}>
+                  VIZAG
+                </span>
+                <span className={cn(
+                  "text-sm font-display font-black tracking-tighter leading-none transition-colors duration-500",
+                  "text-orange-500"
+                )}>
+                  TAXI
+                </span>
+              </div>
               <span className={cn(
-                "text-xl font-bold tracking-tighter leading-none",
-                isScrolled ? "text-gray-900" : "text-white"
+                "text-[7px] font-black uppercase tracking-[0.3em] opacity-60 transition-colors duration-500",
+                "text-slate-500"
               )}>
-                SHANNU <span className="text-blue-600">TRAVELS</span>
-              </span>
-              <span className={cn(
-                "text-[10px] uppercase tracking-[0.2em] font-bold opacity-60",
-                isScrolled ? "text-gray-500" : "text-white/60"
-              )}>
-                Vizag Taxi Hub
+                Journeys that connect, Memories that last
               </span>
             </div>
           </Link>
 
-          {/* Desktop Links */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  "text-sm font-semibold transition-colors flex items-center gap-1 group",
-                  isScrolled ? "text-gray-600 hover:text-blue-600" : "text-white/80 hover:text-white"
+          {/* Nav Links */}
+          <nav className="hidden lg:flex items-center gap-2">
+            {NAV_LINKS.map((link) => (
+              <div key={link.name} className="relative group/item">
+                {link.hasDropdown ? (
+                  <button
+                    onClick={(e) => toggleMenu(e, link.name)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                      "text-slate-600 hover:text-emerald-600 hover:bg-emerald-500/5",
+                      activeMegaMenu === link.name && "text-emerald-600 bg-emerald-500/10"
+                    )}
+                  >
+                    {link.name}
+                    <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-500", activeMegaMenu === link.name && "rotate-180")} />
+                  </button>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 block",
+                      "text-slate-600 hover:text-emerald-600 hover:bg-emerald-500/5"
+                    )}
+                  >
+                    {link.name}
+                  </Link>
                 )}
-              >
-                {link.name}
-                {link.hasDropdown && <ChevronDown className="w-4 h-4 opacity-50 group-hover:rotate-180 transition-transform" />}
-              </Link>
+
+                {/* Dropdowns */}
+                <AnimatePresence>
+                  {activeMegaMenu === link.name && (
+                    <>
+                      {link.name === "Services" && (
+                        <MegaMenu isOpen={activeMegaMenu === "Services"} onClose={() => setActiveMegaMenu(null)} />
+                      )}
+                      {link.name === "Tour Packages" && (
+                        <TourMegaMenu isOpen={activeMegaMenu === "Tour Packages"} onClose={() => setActiveMegaMenu(null)} />
+                      )}
+                      {link.name === "Company" && (
+                        <SimpleDropdown isOpen={activeMegaMenu === "Company"} items={COMPANY_LINKS} title="Our Company" onClose={() => setActiveMegaMenu(null)} />
+                      )}
+                      {link.name === "Support" && (
+                        <SimpleDropdown isOpen={activeMegaMenu === "Support"} items={SUPPORT_LINKS} title="Support Hub" onClose={() => setActiveMegaMenu(null)} />
+                      )}
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             ))}
           </nav>
 
           {/* Actions */}
-          <div className="hidden lg:flex items-center gap-6">
-            <Link 
-              href="tel:9966363662" 
+          <div className="hidden lg:flex items-center gap-4">
+            <a
+              href="tel:9966363662"
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
-                isScrolled 
-                  ? "bg-blue-50 border-blue-100 text-blue-600" 
-                  : "bg-white/10 border-white/20 text-white"
+                "flex items-center gap-2 px-5 py-2 rounded-full border-2 transition-all duration-300 font-bold text-xs tracking-tight",
+                isScrolled
+                  ? "bg-slate-50 border-slate-200 text-slate-900 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                  : "bg-emerald-500/5 border-emerald-500/20 text-emerald-600 hover:bg-emerald-600 hover:text-white"
               )}
             >
-              <Phone className="w-4 h-4" />
-              <span className="font-bold text-sm">9966363662</span>
-            </Link>
+              <Phone className="w-3.5 h-3.5" />
+              9966363662
+            </a>
 
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" className={cn(
-                "font-bold",
-                isScrolled ? "text-gray-900 hover:bg-gray-100" : "text-white hover:bg-white/10"
-              )}>
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 ml-2">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "font-bold text-xs rounded-full px-5 transition-all duration-300",
+                  "text-slate-600 hover:text-emerald-600 hover:bg-emerald-500/5"
+                )}
+              >
                 Login
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 font-bold shadow-lg shadow-blue-600/20 transition-transform hover:scale-105 active:scale-95">
-                Sign Up
+              <Button className="bg-orange-600 hover:bg-orange-500 text-white rounded-full px-7 text-xs font-black tracking-widest shadow-lg shadow-orange-600/20 hover:scale-105 active:scale-95 transition-all border-none uppercase">
+                Join
               </Button>
             </div>
           </div>
 
-          {/* Mobile Toggle */}
-          <button 
+          {/* Mobile Menu Toggle */}
+          <button
             onClick={() => setIsMobileOpen(true)}
             className={cn(
-              "lg:hidden p-2 rounded-xl transition-colors",
-              isScrolled ? "text-gray-900" : "text-white"
+              "lg:hidden p-3 rounded-2xl transition-all duration-300",
+              "text-slate-900 hover:bg-slate-100"
             )}
           >
-            <Menu className="w-8 h-8" />
+            <Menu className="w-7 h-7" />
           </button>
         </div>
       </header>

@@ -18,39 +18,40 @@ interface TripToggleProps {
 
 const TripToggle: React.FC<TripToggleProps> = ({ value, onChange }) => {
   return (
-    <div className="flex bg-gray-100 p-1 rounded-2xl w-full relative h-20">
+    <div className="flex bg-emerald-500/10 dark:bg-emerald-900/20 p-1.5 rounded-2xl w-full relative h-16 lg:h-20 border border-emerald-500/10">
       {/* Animated Background Slide */}
       <div
         className={cn(
-          "absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-blue-600 rounded-xl shadow-lg z-0 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)",
+          "absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-emerald-600 rounded-xl shadow-lg z-0 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)",
           value === "round-trip" ? "translate-x-full" : "translate-x-0"
         )}
       />
 
-      
       <button
         onClick={() => onChange("one-way")}
         className={cn(
-          "flex-1 flex flex-col items-center justify-center gap-0.5 px-2 z-10 transition-colors duration-300",
-          value === "one-way" ? "text-white" : "text-gray-500 hover:text-gray-700"
+          "flex-1 flex flex-col items-center justify-center gap-0.5 px-2 z-10 transition-colors duration-500",
+          value === "one-way" ? "text-white" : "text-emerald-900/40 dark:text-emerald-100/40 hover:text-emerald-600"
         )}
       >
         <span className="text-xs lg:text-sm font-black uppercase tracking-tight whitespace-nowrap">One Way</span>
         <span className="text-[7px] lg:text-[9px] opacity-80 font-bold uppercase tracking-tighter leading-none block">
-Get dropped off</span>
+          Get dropped off
+        </span>
       </button>
+
       <button
         onClick={() => onChange("round-trip")}
         className={cn(
-          "flex-1 flex flex-col items-center justify-center gap-0.5 px-2 z-10 transition-colors duration-300",
-          value === "round-trip" ? "text-white" : "text-gray-500 hover:text-gray-700"
+          "flex-1 flex flex-col items-center justify-center gap-0.5 px-2 z-10 transition-colors duration-500",
+          value === "round-trip" ? "text-white" : "text-emerald-900/40 dark:text-emerald-100/40 hover:text-emerald-600"
         )}
       >
         <span className="text-xs lg:text-sm font-black uppercase tracking-tight whitespace-nowrap">Round Trip</span>
         <span className="text-[7px] lg:text-[9px] opacity-80 font-bold uppercase tracking-tighter leading-none block">
-Keep cab till return</span>
+          Keep cab till return
+        </span>
       </button>
-
     </div>
 
   );

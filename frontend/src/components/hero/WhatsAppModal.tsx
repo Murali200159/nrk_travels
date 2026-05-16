@@ -87,18 +87,18 @@ User Phone: +91 ${phoneNumber}
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
         onClick={onClose}
       />
 
       {/* Modal Container */}
-      <div className="relative bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-[480px] overflow-hidden animate-in zoom-in slide-in-from-bottom-8 duration-500">
-        
+      <div className="relative bg-white dark:bg-emerald-950 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-[480px] overflow-hidden animate-in zoom-in slide-in-from-bottom-8 duration-500">
+
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
-          className="absolute top-8 right-8 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900"
+          className="absolute top-8 right-8 p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 rounded-full transition-colors text-emerald-950/20 dark:text-emerald-50/20 hover:text-emerald-950 dark:hover:text-emerald-50"
         >
           <X className="w-6 h-6" />
         </button>
@@ -106,32 +106,32 @@ User Phone: +91 ${phoneNumber}
         <div className="p-8 lg:p-12 space-y-10">
           {/* Header */}
           <div className="space-y-4">
-            <h2 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
+            <h2 className="text-3xl lg:text-4xl font-black text-emerald-950 dark:text-emerald-50 leading-tight">
               Instant Booking
             </h2>
-            <p className="text-gray-500 font-medium text-lg leading-relaxed">
-              Enter your mobile number to send your booking details directly to our Gmail inbox.
+            <p className="text-emerald-900/60 dark:text-emerald-100/60 font-medium text-lg leading-relaxed">
+              Enter your mobile number to send your booking details directly to our team.
             </p>
           </div>
 
           {/* Form */}
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-400 ml-1">
+              <label className="text-[11px] font-black uppercase tracking-[0.25em] text-emerald-900/40 dark:text-emerald-100/40 ml-1">
                 Mobile number
               </label>
               <div className={cn(
                 "flex gap-0 border rounded-2xl overflow-hidden transition-all duration-300",
-                isValid ? "border-blue-500 ring-4 ring-blue-500/10 shadow-lg" : "border-gray-200 focus-within:border-gray-400"
+                isValid ? "border-emerald-500 ring-4 ring-emerald-500/10 shadow-lg" : "border-emerald-500/10 focus-within:border-emerald-500/40 bg-emerald-50/30 dark:bg-emerald-900/20"
               )}>
                 {/* Country Code Selector */}
-                <div className="bg-gray-50 px-4 lg:px-6 border-r border-gray-200 flex items-center gap-2 flex-shrink-0 cursor-default min-w-[100px] lg:min-w-[120px]">
-                  <span className="font-bold text-gray-900 text-base lg:text-lg">+91</span>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">(IN)</span>
-                  <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 text-gray-400" />
+                <div className="bg-emerald-500/5 px-4 lg:px-6 border-r border-emerald-500/10 flex items-center gap-2 flex-shrink-0 cursor-default min-w-[100px] lg:min-w-[120px]">
+                  <span className="font-black text-emerald-950 dark:text-emerald-50 text-base lg:text-lg">+91</span>
+                  <span className="text-[10px] font-black text-emerald-900/40 dark:text-emerald-100/40 uppercase tracking-tighter">(IN)</span>
+                  <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 text-emerald-600" />
                 </div>
                 {/* Phone Input */}
-                <input 
+                <input
                   type="tel"
                   maxLength={10}
                   placeholder="Mobile number"
@@ -140,20 +140,20 @@ User Phone: +91 ${phoneNumber}
                     const val = e.target.value.replace(/\D/g, "");
                     if (val.length <= 10) setPhoneNumber(val);
                   }}
-                  className="flex-1 h-16 pl-6 pr-4 bg-white text-lg lg:text-xl font-bold placeholder:text-gray-300 focus:outline-none"
+                  className="flex-1 h-16 pl-6 pr-4 bg-transparent text-lg lg:text-xl font-black text-emerald-950 dark:text-emerald-50 placeholder:text-emerald-900/20 dark:placeholder:text-emerald-100/20 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-4">
-              <Button 
+              <Button
                 onClick={handleConfirm}
                 disabled={!isValid || isSubmitting}
                 className={cn(
-                  "w-full h-16 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3",
+                  "w-full h-16 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3 border-none",
                   isValid && !isSubmitting
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-600/30 hover:scale-[1.02] active:scale-95" 
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-80"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xl shadow-emerald-600/30 hover:scale-[1.02] active:scale-95"
+                    : "bg-emerald-500/5 text-emerald-950/20 dark:text-emerald-50/20 cursor-not-allowed opacity-80"
                 )}
               >
                 {isSubmitting ? (
@@ -164,20 +164,20 @@ User Phone: +91 ${phoneNumber}
                   "Enter 10 Digits"
                 )}
               </Button>
-              
+
               <div className="flex items-start gap-3 p-1">
-                <p className="text-[11px] text-gray-400 font-bold leading-relaxed flex-1">
-                  By clicking on <span className="text-gray-900">Search Cabs</span>, your booking enquiry will be sent automatically to our team.
+                <p className="text-[11px] text-emerald-900/40 dark:text-emerald-100/40 font-bold leading-relaxed flex-1">
+                  By clicking on <span className="text-emerald-950 dark:text-emerald-50">Search Cabs</span>, your booking enquiry will be sent automatically to our team.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Trust Badge */}
-          <div className="flex items-center justify-center gap-2 py-2 border-t border-gray-50 pt-8">
-            <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
-              <ShieldCheck className="w-5 h-5 text-blue-600" />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">Secure & Direct Submission</span>
+          <div className="flex items-center justify-center gap-2 py-2 border-t border-emerald-500/5 pt-8">
+            <div className="flex items-center gap-2 bg-emerald-500/5 px-4 py-2 rounded-full">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600">Secure & Direct Submission</span>
             </div>
           </div>
         </div>

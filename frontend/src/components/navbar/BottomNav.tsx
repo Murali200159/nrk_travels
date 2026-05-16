@@ -30,13 +30,13 @@ const BottomNav = () => {
         >
           <div className={cn(
             "p-2 rounded-xl transition-all duration-300",
-            link.name === "Home" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" : "text-gray-400 group-hover:text-blue-600"
+            link.name === "Home" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30" : "text-emerald-900/40 dark:text-emerald-100/40 group-hover:text-emerald-600"
           )}>
             <link.icon className="w-6 h-6" />
           </div>
           <span className={cn(
-            "text-[10px] font-bold uppercase tracking-widest transition-colors",
-            link.name === "Home" ? "text-blue-600" : "text-gray-400 group-hover:text-blue-600"
+            "text-[10px] font-black uppercase tracking-widest transition-colors",
+            link.name === "Home" ? "text-emerald-600" : "text-emerald-900/40 dark:text-emerald-100/40 group-hover:text-emerald-600"
           )}>
             {link.name}
           </span>

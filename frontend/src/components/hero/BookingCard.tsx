@@ -12,46 +12,44 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import BookingTabs from "./BookingTabs";
 import BookingForm from "./BookingForm";
+import { ROUTES } from "@/lib/navigation";
+import Link from "next/link";
 
 const BookingCard = () => {
   const [activeTab, setActiveTab] = useState("outstation");
 
   return (
-    <div className="w-full max-w-7xl mx-auto z-20 relative px-4">
-
-      <div className="bg-white/95 backdrop-blur-3xl rounded-[2rem] lg:rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border border-white/50 relative">
-
+    <div className="w-full max-w-[100%] mx-auto z-20 relative px-4">
+      <div className="bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-premium relative overflow-hidden border border-emerald-500/10 backdrop-blur-3xl">
         {/* Info Badge - Top on Mobile */}
-        <div className="bg-blue-600 p-3 lg:hidden flex items-center justify-between px-6 rounded-t-[2rem]">
+        <div className="bg-orange-600 p-3 lg:hidden flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
-            <div className="bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">New</div>
-            <span className="text-xs font-bold text-white">Urbania now available!</span>
+            <div className="bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">New</div>
+            <span className="text-xs font-bold text-white tracking-tight">Urbania Luxury now available!</span>
           </div>
-          <button className="bg-white text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Book</button>
+          <Link href={ROUTES.FLEET_SECTION} className="bg-white text-orange-600 px-4 py-1 rounded-lg text-[10px] font-black uppercase">Book</Link>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center justify-between border-b border-gray-100 lg:pr-8 rounded-t-[2.5rem] lg:rounded-t-[2.5rem] bg-white">
+        <div className="flex flex-col lg:flex-row items-center justify-between border-b border-emerald-500/10 lg:pr-10">
           <BookingTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-          
+
           {/* Info Badge - Integrated on Desktop */}
-          <div className="hidden lg:flex items-center gap-3 px-5 py-2 bg-blue-50 border border-blue-100 rounded-2xl my-2">
-            <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase">New</div>
-            <span className="text-sm font-bold text-blue-900">Urbania now available!</span>
-            <button className="text-blue-600 hover:text-blue-800 font-black text-xs uppercase tracking-widest flex items-center gap-1 transition-colors">
-              Book Now <ArrowRight className="w-3 h-3" />
-            </button>
+          <div className="hidden lg:flex items-center gap-4 px-6 py-2.5 bg-emerald-50 border border-emerald-500/10 rounded-2xl my-3 group">
+            <div className="bg-orange-600 text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">New</div>
+            <span className="text-sm font-bold text-slate-900">Urbania Luxury now available!</span>
+            <Link
+              href={ROUTES.FLEET_SECTION}
+              className="text-orange-600 hover:text-orange-500 font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 transition-all group-hover:gap-3"
+            >
+              Book Now <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
-        <div className="rounded-b-[2.5rem] bg-white/50">
-
+        <div className="p-2">
           <BookingForm activeTab={activeTab} />
         </div>
-
       </div>
-
-
-
     </div>
 
   );

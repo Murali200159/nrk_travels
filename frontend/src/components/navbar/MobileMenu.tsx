@@ -75,6 +75,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             </div>
 
             <nav className="flex flex-col gap-2 mb-16">
+              <Link
+                href="/"
+                onClick={onClose}
+                className="py-4 text-3xl font-black text-emerald-950 hover:text-orange-500 transition-all text-left"
+              >
+                Home
+              </Link>
               {NAV_LINKS.map((link) => {
                 const hasSubLinks = link.hasDropdown;
                 const isOpen = openDropdown === link.name;

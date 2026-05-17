@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 interface MenuItem {
   title: string;
   info?: string;
+  href?: string;
 }
 
 interface MenuSection {
@@ -27,12 +28,12 @@ const tourMenuData: MenuSection[] = [
     icon: Compass,
     description: "Full Catalog",
     items: [
-      { title: "3 Days Vizag & Araku Valley Tour", info: "Complete exploration" },
-      { title: "Araku Valley Tour", info: "Day trip to the valley" },
-      { title: "Arasavalli & Srikurmam Temple Tour", info: "Spiritual journey" },
-      { title: "Lambasingi Tour", info: "Experience the cool weather" },
-      { title: "Vanajangi Tour", info: "Spectacular sunrise views" },
-      { title: "Vizag Full City Tour", info: "Complete City Exploration" },
+      { title: "3 Days Vizag & Araku Valley Tour", info: "Complete exploration", href: "/tours/vizag-araku-3d" },
+      { title: "Araku Valley Tour", info: "Day trip to the valley", href: "/tours/araku-valley" },
+      { title: "Arasavalli & Srikurmam Temple Tour", info: "Spiritual journey", href: "/tours/arasavalli-temple" },
+      { title: "Lambasingi Tour", info: "Experience the cool weather", href: "/tours/lambasingi" },
+      { title: "Vanajangi Tour", info: "Spectacular sunrise views", href: "/tours/vanajangi" },
+      { title: "Vizag Full City Tour", info: "Complete City Exploration", href: "/tours/vizag-city-tour" },
     ]
   },
   {
@@ -41,11 +42,12 @@ const tourMenuData: MenuSection[] = [
     icon: Mountain,
     description: "Nature & Adventure",
     items: [
-      { title: "Borra Caves Visit" },
-      { title: "Coffee Museum" },
-      { title: "Galikonda View Point" },
-      { title: "Tribal Museum" },
-      { title: "Katiki Waterfalls" },
+      { title: "Borra Caves Visit", href: "/tours/araku-valley" },
+      { title: "Coffee Museum", href: "/tours/araku-valley" },
+      { title: "Galikonda View Point", href: "/tours/araku-valley" },
+      { title: "Tribal Museum", href: "/tours/araku-valley" },
+      { title: "Katiki Waterfalls", href: "/tours/araku-valley" },
+      { title: "Padmapuram Gardens", href: "/tours/araku-valley" },
     ]
   },
   {
@@ -54,10 +56,10 @@ const tourMenuData: MenuSection[] = [
     icon: Palmtree,
     description: "Winter Paradise",
     items: [
-      { title: "Sunrise at Lammasingi" },
-      { title: "Strawberry Farms" },
-      { title: "Kothapalli Waterfalls" },
-      { title: "Pine Forests" },
+      { title: "Sunrise at Lammasingi", href: "/tours/lambasingi" },
+      { title: "Strawberry Farms", href: "/tours/lambasingi" },
+      { title: "Kothapalli Waterfalls", href: "/tours/lambasingi" },
+      { title: "Pine Forests", href: "/tours/lambasingi" },
     ]
   },
   {
@@ -66,11 +68,12 @@ const tourMenuData: MenuSection[] = [
     icon: Landmark,
     description: "City Exploration",
     items: [
-      { title: "Kailasagiri & Simhachalam" },
-      { title: "Rishikonda & Thotlakonda" },
-      { title: "Submarine & Aircraft Museums" },
-      { title: "Dolphin's Nose & Yarada" },
-      { title: "RK Beach & Central Park" },
+      { title: "Kailasagiri & Simhachalam", href: "/tours/vizag-city-tour" },
+      { title: "Rishikonda & Thotlakonda", href: "/tours/vizag-city-tour" },
+      { title: "Submarine & Aircraft Museums", href: "/tours/vizag-city-tour" },
+      { title: "Dolphin's Nose & Yarada", href: "/tours/vizag-city-tour" },
+      { title: "RK Beach & Central Park", href: "/tours/vizag-city-tour" },
+      { title: "Indira Gandhi Zoo Park", href: "/tours/vizag-city-tour" },
     ]
   },
   {
@@ -154,10 +157,11 @@ const TourMegaMenu: React.FC<TourMegaMenuProps> = ({ isOpen, onClose }) => {
             )}>
               {currentData?.items?.map((item, i) => {
                 const slug = item.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and");
+                const itemHref = item.href || `/booking/${slug}`;
                 return (
                   <Link
                     key={i}
-                    href={`/booking/${slug}`}
+                    href={itemHref}
                     onClick={onClose}
                     className={cn(
                       "block p-3 rounded-xl border border-transparent transition-all duration-300 cursor-pointer group",

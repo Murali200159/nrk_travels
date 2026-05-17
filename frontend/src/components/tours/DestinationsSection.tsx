@@ -64,7 +64,7 @@ const DestinationsSection = () => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-2 lg:py-16 bg-white">
+    <section id="tours" className="py-2 lg:py-16 bg-white">
       <div className="max-w-[100%] mx-auto px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16 space-y-4">

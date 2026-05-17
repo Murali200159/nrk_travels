@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Phone, Mail, MapPin, Globe, Camera, Play, Share2, Heart } from "lucide-react";
 
 import { ROUTES } from "@/lib/navigation";
@@ -64,10 +65,17 @@ const Footer = () => {
           {/* Company Info */}
           <div className="space-y-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black shadow-lg shadow-emerald-600/20">V</div>
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-slate-100 shadow-md flex items-center justify-center relative">
+                <Image 
+                  src="/images/logo.jpg" 
+                  alt="NRK Travels Logo" 
+                  fill 
+                  className="object-cover object-left scale-[1.35] -translate-x-[4%]" 
+                />
+              </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-emerald-600 tracking-tight">VIZAG</span>
-                <span className="text-sm font-black text-orange-500 tracking-tight">TAXI</span>
+                <span className="text-xl font-black text-emerald-600 tracking-tight">NRK</span>
+                <span className="text-sm font-black text-orange-500 tracking-tight">TRAVELS</span>
               </div>
             </div>
             <p className="text-slate-600 text-[13px] leading-relaxed font-bold">

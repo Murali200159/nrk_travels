@@ -16,8 +16,8 @@ interface GroupTourCardProps {
 const GroupTourCard: React.FC<GroupTourCardProps> = ({ slug, title, date, price, image }) => {
   return (
     <Link
-      href={`/group-tours/${slug}`}
-      className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-emerald-600/10 transition-all border border-slate-100 flex flex-col h-full group"
+      href={`/booking/${slug === 'arasavalli-group-tour' ? 'arasavalli' : slug === 'vizag-to-pithapuram' ? 'pithapuram' : slug === 'araku-group-trip' ? 'araku-valley' : 'lambasingi'}?fleet=tempo`}
+      className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-emerald-600/10 transition-all border border-slate-100 flex flex-col h-full group"
     >
       {/* Image with Date Badge */}
       <div className="relative aspect-[16/10] overflow-hidden">

@@ -43,14 +43,18 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${syne.variable} font-jakarta antialiased bg-white text-slate-900 transition-colors duration-500`}>
         <Providers>
-          <Suspense fallback={null}>
-            <ScrollToTop />
-            <Navbar />
-            <div className="relative overflow-hidden">
+          <ScrollToTop />
+          <Navbar />
+          <div className="relative overflow-hidden">
+            <Suspense fallback={
+              <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+                <div className="w-12 h-12 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin" />
+              </div>
+            }>
               {children}
-            </div>
-            <BottomNav />
-          </Suspense>
+            </Suspense>
+          </div>
+          <BottomNav />
         </Providers>
       </body>
     </html>

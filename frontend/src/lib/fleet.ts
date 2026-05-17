@@ -24,6 +24,42 @@ export const FLEET_DATA: Record<string, Vehicle> = {
     minKm: "300",
     isPremium: false
   },
+  "toyota-glanza": {
+    slug: "toyota-glanza",
+    model: "Toyota Glanza",
+    type: "Hatchback",
+    description: "A premium hatchback offering a smooth, comfortable ride. Perfect for city driving and small family trips, providing excellent mileage and compact convenience.",
+    pax: "4",
+    pricePerKm: "14",
+    features: ["Touchscreen Infotainment", "Air Conditioning", "ABS & Airbags", "Rear Parking Camera", "USB Charger"],
+    images: ["/images/fleet/glanza.png", "/images/fleet/swift_dzire.png"],
+    minKm: "300",
+    isPremium: false
+  },
+  "honda-amaze": {
+    slug: "honda-amaze",
+    model: "Honda Amaze",
+    type: "Sedan",
+    description: "A spacious subcompact sedan with excellent comfort, sleek styling, and plenty of trunk space. Great for budget-conscious outstation trips.",
+    pax: "4",
+    pricePerKm: "14",
+    features: ["Spacious Cabin", "Dual Airbags", "AC with Heater", "Central Locking", "Power Steering"],
+    images: ["/images/fleet/honda_amaze.png", "/images/fleet/swift_dzire.png"],
+    minKm: "300",
+    isPremium: false
+  },
+  "ertiga": {
+    slug: "ertiga",
+    model: "Ertiga",
+    type: "MUV",
+    description: "A versatile 7-seater that balances comfort and economy. The Ertiga is perfect for medium-sized groups looking for a reliable and affordable travel solution without compromising on space.",
+    pax: "6",
+    pricePerKm: "18",
+    features: ["Flexible Seating", "Roof Mounted AC", "Efficient Engine", "Comfortable Suspension", "Music System"],
+    images: ["/images/fleet/ertiga.png", "/images/fleet/innova_crysta.png"],
+    minKm: "300",
+    isPremium: false
+  },
   "innova-crysta": {
     slug: "innova-crysta",
     model: "Innova Crysta",
@@ -35,18 +71,6 @@ export const FLEET_DATA: Record<string, Vehicle> = {
     images: ["/images/fleet/innova_crysta.png", "/images/fleet/ertiga.png"],
     minKm: "300",
     isPremium: true
-  },
-  "ertiga": {
-    slug: "ertiga",
-    model: "Maruti Ertiga",
-    type: "MUV",
-    description: "A versatile 7-seater that balances comfort and economy. The Ertiga is perfect for medium-sized groups looking for a reliable and affordable travel solution without compromising on space.",
-    pax: "6",
-    pricePerKm: "18",
-    features: ["Flexible Seating", "Roof Mounted AC", "Efficient Engine", "Comfortable Suspension", "Music System"],
-    images: ["/images/fleet/ertiga.png", "/images/fleet/innova_crysta.png"],
-    minKm: "300",
-    isPremium: false
   },
   "tempo-traveller": {
     slug: "tempo-traveller",

@@ -42,6 +42,15 @@ const TourDetailsPage = () => {
   const [tripMode, setTripMode] = useState<"one-way" | "round-trip">("one-way");
   const [activeTab, setActiveTab] = useState<"overview" | "itinerary" | "policy">("overview");
 
+  React.useEffect(() => {
+    if (tour) {
+      setBookingStep("select");
+      setSelectedVehicle(tour.vehicleRates[0] || null);
+      setActiveTab("overview");
+      setTripMode("one-way");
+    }
+  }, [tour?.slug]);
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",

@@ -75,7 +75,9 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
         const slug = drop.toLowerCase().trim().replace(/\s+/g, "-");
         path = `/booking/${slug}`;
       } else if (activeTab === "airport") {
-        path = "/booking/vizag-airport-transfer";
+        const actualPickup = airportTrip === "from-airport" ? "Visakhapatnam International Airport" : pickup;
+        const actualDrop = airportTrip === "to-airport" ? "Visakhapatnam International Airport" : drop;
+        path = `/booking/vizag-airport-transfer?pickup=${encodeURIComponent(actualPickup)}&drop=${encodeURIComponent(actualDrop)}&direction=${airportTrip}&date=${departureDate.toISOString()}`;
       } else if (activeTab === "local") {
         path = "/booking/local-city-taxi";
       }

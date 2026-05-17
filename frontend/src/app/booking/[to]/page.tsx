@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -37,24 +37,76 @@ import { DESTINATIONS } from "@/lib/destinations";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/layout/Footer";
 import SeatSelection from "@/components/booking/SeatSelection";
+import DestinationsSection from "@/components/tours/DestinationsSection";
 import { cn } from "@/lib/utils";
 
-const BookingPage = () => {
+const LOCAL_SUGGESTIONS = [
+  { display_name: "Amadalavalasa, Srikakulam, Andhra Pradesh, India", lat: "18.4124", lon: "83.9038", address: { postcode: "532185", village: "Amadalavalasa" } },
+  { display_name: "Annavaram, East Godavari, Andhra Pradesh, India", lat: "17.2798", lon: "82.4087", address: { postcode: "533406", village: "Annavaram" } },
+  { display_name: "Araku Valley, Alluri Sitharama Raju, Andhra Pradesh, India", lat: "18.2677", lon: "82.8791", address: { postcode: "531149", village: "Araku Valley" } },
+  { display_name: "Arasavalli, Srikakulam, Andhra Pradesh, India", lat: "18.3075", lon: "83.9168", address: { postcode: "532401", village: "Arasavalli" } },
+  { display_name: "Bangalore, Karnataka, India", lat: "12.9716", lon: "77.5946", address: { postcode: "560001", city: "Bangalore" } },
+  { display_name: "Bhadrachalam, Bhadradri Kothagudem, Telangana, India", lat: "17.6715", lon: "80.8931", address: { postcode: "507111", village: "Bhadrachalam" } },
+  { display_name: "Bhubaneswar, Khordha, Odisha, India", lat: "20.2961", lon: "85.8245", address: { postcode: "751001", city: "Bhubaneswar" } },
+  { display_name: "Bobbili, Vizianagaram, Andhra Pradesh, India", lat: "18.5667", lon: "83.3667", address: { postcode: "535558", village: "Bobbili" } },
+  { display_name: "Chennai, Tamil Nadu, India", lat: "13.0827", lon: "80.2707", address: { postcode: "600001", city: "Chennai" } },
+  { display_name: "Eluru, West Godavari, Andhra Pradesh, India", lat: "16.7118", lon: "81.1032", address: { postcode: "534001", city: "Eluru" } },
+  { display_name: "Guntur, Andhra Pradesh, India", lat: "16.3067", lon: "80.4365", address: { postcode: "522002", city: "Guntur" } },
+  { display_name: "Hyderabad, Telangana, India", lat: "17.3850", lon: "78.4867", address: { postcode: "500001", city: "Hyderabad" } },
+  { display_name: "Ichchapuram, Srikakulam, Andhra Pradesh, India", lat: "19.1171", lon: "84.6931", address: { postcode: "532312", village: "Ichchapuram" } },
+  { display_name: "Jagdalpur, Bastar, Chhattisgarh, India", lat: "19.0730", lon: "82.0099", address: { postcode: "494001", city: "Jagdalpur" } },
+  { display_name: "Kakinada, East Godavari, Andhra Pradesh, India", lat: "16.9891", lon: "82.2439", address: { postcode: "533001", city: "Kakinada" } },
+  { display_name: "Khammam, Telangana, India", lat: "17.2473", lon: "80.1514", address: { postcode: "507001", city: "Khammam" } },
+  { display_name: "Kolkata, West Bengal, India", lat: "22.5726", lon: "88.3639", address: { postcode: "700001", city: "Kolkata" } },
+  { display_name: "Kurnool, Andhra Pradesh, India", lat: "15.8281", lon: "78.0373", address: { postcode: "518001", city: "Kurnool" } },
+  { display_name: "Lambasingi, Alluri Sitharama Raju, Andhra Pradesh, India", lat: "17.8178", lon: "82.4936", address: { postcode: "531116", village: "Lambasingi" } },
+  { display_name: "Narasannapeta, Srikakulam, Andhra Pradesh, India", lat: "18.4239", lon: "84.0475", address: { postcode: "532421", village: "Narasannapeta" } },
+  { display_name: "Nellore, Sri Potti Sriramulu Nellore, Andhra Pradesh, India", lat: "14.4426", lon: "79.9865", address: { postcode: "524001", city: "Nellore" } },
+  { display_name: "Palakollu, West Godavari, Andhra Pradesh, India", lat: "16.5161", lon: "81.7250", address: { postcode: "534260", village: "Palakollu" } },
+  { display_name: "Palakonda, Parvathipuram Manyam, Andhra Pradesh, India", lat: "18.6015", lon: "83.7547", address: { postcode: "532440", village: "Palakonda" } },
+  { display_name: "Palasa, Srikakulam, Andhra Pradesh, India", lat: "18.7702", lon: "84.4172", address: { postcode: "532221", village: "Palasa" } },
+  { display_name: "Parvathipuram, Parvathipuram Manyam, Andhra Pradesh, India", lat: "18.7788", lon: "83.4243", address: { postcode: "535501", city: "Parvathipuram" } },
+  { display_name: "Raipur, Chhattisgarh, India", lat: "21.2514", lon: "81.6296", address: { postcode: "492001", city: "Raipur" } },
+  { display_name: "Rajahmundry, East Godavari, Andhra Pradesh, India", lat: "17.0005", lon: "81.7878", address: { postcode: "533101", city: "Rajahmundry" } },
+  { display_name: "Ravulapalem, Dr. B.R. Ambedkar Konaseema, Andhra Pradesh, India", lat: "16.7547", lon: "81.8492", address: { postcode: "533238", village: "Ravulapalem" } },
+  { display_name: "Razam, Vizianagaram, Andhra Pradesh, India", lat: "18.4500", lon: "83.6500", address: { postcode: "532127", village: "Razam" } },
+  { display_name: "Sompeta, Srikakulam, Andhra Pradesh, India", lat: "18.9328", lon: "84.5956", address: { postcode: "532440", village: "Sompeta" } },
+  { display_name: "Srikakulam, Andhra Pradesh, India", lat: "18.3000", lon: "83.9000", address: { postcode: "532001", city: "Srikakulam" } },
+  { display_name: "Srimukhalingam, Srikakulam, Andhra Pradesh, India", lat: "18.5958", lon: "83.9631", address: { postcode: "532428", village: "Srimukhalingam" } },
+  { display_name: "Tirupati, Tirupati District, Andhra Pradesh, India", lat: "13.6288", lon: "79.4192", address: { postcode: "517501", city: "Tirupati" } },
+  { display_name: "Tuni, Kakinada District, Andhra Pradesh, India", lat: "17.3533", lon: "82.5489", address: { postcode: "533401", village: "Tuni" } },
+  { display_name: "Vijayawada, NTR District, Andhra Pradesh, India", lat: "16.5062", lon: "80.6480", address: { postcode: "520001", city: "Vijayawada" } },
+  { display_name: "Vizianagaram, Andhra Pradesh, India", lat: "18.1167", lon: "83.4167", address: { postcode: "535001", city: "Vizianagaram" } }
+];
+
+const POPULAR_PICKUPS = [
+  { display_name: "Visakhapatnam Railway Station, Andhra Pradesh, India", lat: "17.7289", lon: "83.2982", address: { postcode: "530004", village: "Railway Station" } },
+  { display_name: "Visakhapatnam Airport (VTZ), Andhra Pradesh, India", lat: "17.7230", lon: "83.2246", address: { postcode: "530009", village: "Airport" } },
+  { display_name: "RTC Complex, Visakhapatnam, Andhra Pradesh, India", lat: "17.7214", lon: "83.3039", address: { postcode: "530020", village: "RTC Complex" } },
+  { display_name: "MVP Colony, Visakhapatnam, Andhra Pradesh, India", lat: "17.7423", lon: "83.3323", address: { postcode: "530017", village: "MVP Colony" } },
+  { display_name: "Gajuwaka, Visakhapatnam, Andhra Pradesh, India", lat: "17.6896", lon: "83.2089", address: { postcode: "530026", village: "Gajuwaka" } },
+  { display_name: "Madhurawada, Visakhapatnam, Andhra Pradesh, India", lat: "17.8186", lon: "83.3486", address: { postcode: "530048", village: "Madhurawada" } }
+];
+
+const BookingPageContent = () => {
   const params = useParams();
   const router = useRouter();
   const toSlug = params.to as string;
+  const searchParams = useSearchParams();
+  const fleetParam = searchParams.get("fleet");
+  const isTempoMode = fleetParam === "tempo";
 
   const destination = useMemo(() => {
     if (DESTINATIONS[toSlug]) return DESTINATIONS[toSlug];
 
-    // Fallback for custom/unknown cities
-    const name = toSlug.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    const isAirport = toSlug === "vizag-airport-transfer" || toSlug.includes("airport");
+    const name = isAirport ? "Vizag Airport Transfer" : toSlug.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
     return {
       name: name,
-      distanceKm: 250, // Generic distance for unknown routes
-      duration: "5 hours",
+      distanceKm: isAirport ? 35 : 250, // Realistic city distance
+      duration: isAirport ? "1 hour" : "5 hours",
       type: "outstation" as const,
-      description: `Premium travel service to ${name}. Experience a safe and comfortable journey with NRK Travels.`,
+      description: isAirport ? "Premium Airport Transfer Service. Smooth, reliable, and comfortable rides directly to or from Visakhapatnam International Airport." : `Premium travel service to ${name}. Experience a safe and comfortable journey with NRK Travels.`,
       highlights: ["Experienced Drivers", "Well Maintained Fleet", "24/7 Support", "Transparent Pricing"],
       itinerary: [
         { day: "1", title: "Departure", activities: [`Pickup from Visakhapatnam`, `Travel to ${name}`, `Safe Drop-off at destination`] }
@@ -63,7 +115,9 @@ const BookingPage = () => {
     };
   }, [toSlug]);
 
+  const isAirportMode = toSlug === "vizag-airport-transfer" || toSlug.includes("airport");
   const [tripType, setTripType] = useState<"one-way" | "round-trip">("one-way");
+  const [airportTrip, setAirportTrip] = useState<"from-airport" | "to-airport">("from-airport");
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -76,6 +130,34 @@ const BookingPage = () => {
   const [pickupDate, setPickupDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
 
+  // India Location Search States
+  const [fromSearch, setFromSearch] = useState("Visakhapatnam, Andhra Pradesh, India");
+  const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
+  const [showFromSuggestions, setShowFromSuggestions] = useState(false);
+  const [selectedFrom, setSelectedFrom] = useState({
+    name: "Visakhapatnam, Andhra Pradesh, India",
+    lat: 17.6868,
+    lon: 83.2185
+  });
+
+  const [toSearch, setToSearch] = useState(destination.name);
+  const [toSuggestions, setToSuggestions] = useState<any[]>([]);
+  const [showToSuggestions, setShowToSuggestions] = useState(false);
+  const [selectedTo, setSelectedTo] = useState({
+    name: destination.name,
+    lat: 17.6868, // Default, will geocode on mount
+    lon: 83.2185
+  });
+
+  const [calculatedDistance, setCalculatedDistance] = useState<number>(destination.distanceKm);
+  const [calculatedDuration, setCalculatedDuration] = useState<string>(destination.duration);
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [routeError, setRouteError] = useState("");
+  const [mapMode, setMapMode] = useState<"map" | "satellite">("map");
+
+  const mapRef = useRef<HTMLIFrameElement>(null);
+
   useEffect(() => {
     // Initialize dates on client-side only to avoid hydration mismatch
     const now = new Date();
@@ -83,9 +165,362 @@ const BookingPage = () => {
     setPickupDate(now.toISOString().slice(0, 16));
     setReturnDate(future.toISOString().slice(0, 16));
   }, []);
+
   const [isEditingDates, setIsEditingDates] = useState(false);
-  const [destSearch, setDestSearch] = useState("");
-  const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+
+  // Auto-complete Geocoding suggestions fetching
+  const fetchSuggestions = async (query: string, onResults: (results: any[]) => void) => {
+    if (query.trim().length < 3) {
+      onResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&addressdetails=1&limit=5`, {
+        headers: {
+          "Accept-Language": "en"
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        onResults(data || []);
+      } else {
+        onResults([]);
+      }
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      onResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const query = fromSearch.trim();
+    if (query.length < 3) {
+      setFromSuggestions(POPULAR_PICKUPS);
+    } else {
+      const delay = setTimeout(() => {
+        fetchSuggestions(fromSearch, (results) => {
+          const q = fromSearch.toLowerCase();
+          const localFiltered = POPULAR_PICKUPS.filter(p => p.display_name.toLowerCase().includes(q));
+          const combined = [...localFiltered, ...results].filter(
+            (v, i, a) => a.findIndex(t => t.display_name === v.display_name) === i
+          );
+          setFromSuggestions(combined);
+        });
+      }, 400);
+      return () => clearTimeout(delay);
+    }
+  }, [fromSearch]);
+
+  useEffect(() => {
+    const query = toSearch.trim();
+    if (query.length < 3) {
+      setToSuggestions(LOCAL_SUGGESTIONS);
+    } else {
+      const delay = setTimeout(() => {
+        fetchSuggestions(toSearch, (results) => {
+          const q = toSearch.toLowerCase();
+          const localFiltered = LOCAL_SUGGESTIONS.filter(p => p.display_name.toLowerCase().includes(q));
+          const combined = [...localFiltered, ...results].filter(
+            (v, i, a) => a.findIndex(t => t.display_name === v.display_name) === i
+          );
+          setToSuggestions(combined);
+        });
+      }, 400);
+      return () => clearTimeout(delay);
+    }
+  }, [toSearch]);
+
+  // Parse Airport Transfer or Outstation query parameters on mount
+  useEffect(() => {
+    const pickupParam = searchParams.get("pickup");
+    const dropParam = searchParams.get("drop");
+    const directionParam = searchParams.get("direction");
+    const dateParam = searchParams.get("date");
+
+    if (isAirportMode) {
+      if (directionParam === "to-airport" || directionParam === "from-airport") {
+        setAirportTrip(directionParam as any);
+      }
+
+      if (pickupParam) {
+        const actualPickup = decodeURIComponent(pickupParam);
+        setFromSearch(actualPickup);
+        setSelectedFrom(prev => ({
+          ...prev,
+          name: actualPickup,
+          lat: actualPickup.includes("Airport") ? 17.7244 : prev.lat,
+          lon: actualPickup.includes("Airport") ? 83.2245 : prev.lon
+        }));
+      }
+
+      if (dropParam) {
+        const actualDrop = decodeURIComponent(dropParam);
+        setToSearch(actualDrop);
+        setSelectedTo(prev => ({
+          ...prev,
+          name: actualDrop,
+          lat: actualDrop.includes("Airport") ? 17.7244 : prev.lat,
+          lon: actualDrop.includes("Airport") ? 83.2245 : prev.lon
+        }));
+      }
+    }
+
+    if (dateParam) {
+      try {
+        const d = new Date(dateParam);
+        if (!isNaN(d.getTime())) {
+          setPickupDate(d.toISOString().slice(0, 16));
+        }
+      } catch (e) {
+        console.error("Date parsing error:", e);
+      }
+    }
+  }, [searchParams, isAirportMode]);
+
+  // Geocode airport transfer custom location on mount/change
+  useEffect(() => {
+    if (!isAirportMode) return;
+
+    const geocodeAirportLocation = async () => {
+      const isFrom = airportTrip === "from-airport";
+      const targetQuery = isFrom ? toSearch : fromSearch;
+
+      if (!targetQuery || targetQuery === "Visakhapatnam International Airport" || targetQuery.includes("Airport")) return;
+
+      setIsLoadingRoute(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(targetQuery + ", Visakhapatnam")}&countrycodes=in&limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const coords = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+            if (isFrom) {
+              setSelectedTo({
+                name: data[0].display_name,
+                lat: coords.lat,
+                lon: coords.lon
+              });
+              setSelectedFrom({
+                name: "Visakhapatnam International Airport",
+                lat: 17.7244,
+                lon: 83.2245
+              });
+            } else {
+              setSelectedFrom({
+                name: data[0].display_name,
+                lat: coords.lat,
+                lon: coords.lon
+              });
+              setSelectedTo({
+                name: "Visakhapatnam International Airport",
+                lat: 17.7244,
+                lon: 83.2245
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Airport geocoding error:", err);
+      } finally {
+        setIsLoadingRoute(false);
+      }
+    };
+
+    geocodeAirportLocation();
+  }, [isAirportMode, airportTrip, fromSearch, toSearch]);
+
+  // Geocode initial drop destination on mount
+  useEffect(() => {
+    if (isAirportMode) return;
+    const geocodeInitialDestination = async () => {
+      setIsLoadingRoute(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination.name + ", India")}&countrycodes=in&limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const dropPlace = {
+              name: data[0].display_name,
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon)
+            };
+            setSelectedTo(dropPlace);
+            setToSearch(data[0].display_name);
+          }
+        }
+      } catch (err) {
+        console.error("Initial geocoding error:", err);
+      } finally {
+        setIsLoadingRoute(false);
+      }
+    };
+    geocodeInitialDestination();
+  }, [destination.name]);
+
+  // Calculate dynamic driving route using OSRM
+  useEffect(() => {
+    const getRoute = async () => {
+      if (!selectedFrom.lat || !selectedTo.lat) return;
+      
+      setIsLoadingRoute(true);
+      setRouteError("");
+      try {
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${selectedFrom.lon},${selectedFrom.lat};${selectedTo.lon},${selectedTo.lat}?overview=full&geometries=geojson`);
+        if (!res.ok) throw new Error("OSRM Routing failed");
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const distanceKm = Math.round(route.distance / 1000);
+          setCalculatedDistance(distanceKm || 1);
+          
+          // Format duration
+          const durationSec = route.duration;
+          const hours = Math.floor(durationSec / 3600);
+          const minutes = Math.round((durationSec % 3600) / 60);
+          let durStr = "";
+          if (hours > 0) durStr += `${hours}h `;
+          durStr += `${minutes}m`;
+          setCalculatedDuration(durStr || "10m");
+          
+          // Get coordinates for Leaflet
+          const coords = route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]] as [number, number]);
+          setRouteCoordinates(coords);
+        } else {
+          throw new Error("No route found");
+        }
+      } catch (err) {
+        console.error("Routing error:", err);
+        setRouteError("Could not calculate route. Using straight line distance.");
+        // Fallback distance calculation using Haversine formula
+        const R = 6371; // km
+        const dLat = (selectedTo.lat - selectedFrom.lat) * Math.PI / 180;
+        const dLon = (selectedTo.lon - selectedFrom.lon) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(selectedFrom.lat * Math.PI / 180) * Math.cos(selectedTo.lat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const dist = Math.round(R * c);
+        setCalculatedDistance(dist || destination.distanceKm);
+        setCalculatedDuration("Calculated");
+        setRouteCoordinates([[selectedFrom.lat, selectedFrom.lon], [selectedTo.lat, selectedTo.lon]]);
+      } finally {
+        setIsLoadingRoute(false);
+      }
+    };
+    getRoute();
+  }, [selectedFrom.lat, selectedFrom.lon, selectedTo.lat, selectedTo.lon]);
+
+  // Leaflet map code inside an iframe
+  const mapSrcDoc = useMemo(() => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <style>
+          body, html, #map { margin: 0; padding: 0; width: 100%; height: 100%; background: #f8fafc; }
+          .leaflet-container { font-family: inherit; }
+          .custom-popup .leaflet-popup-content-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 4px;
+            font-size: 11px;
+            font-weight: 700;
+          }
+          .custom-popup .leaflet-popup-tip { background: #ffffff; }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script>
+          var map = L.map('map', { zoomControl: false }).setView([17.6868, 83.2185], 11);
+          L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+          var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+
+          var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri'
+          });
+
+          window.addEventListener('message', function(event) {
+            if (event.data.type === 'UPDATE_ROUTE') {
+              var route = event.data;
+              
+              // Clear existing markers/polylines
+              map.eachLayer(function(layer) {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                  map.removeLayer(layer);
+                }
+              });
+
+              if (route.from && route.to) {
+                var fromMarker = L.marker([route.from.lat, route.from.lon]).addTo(map)
+                  .bindPopup('<b>Pickup:</b><br>' + route.from.name, { className: 'custom-popup' });
+                
+                var toMarker = L.marker([route.to.lat, route.to.lon]).addTo(map)
+                  .bindPopup('<b>Dropoff:</b><br>' + route.to.name, { className: 'custom-popup' });
+
+                if (route.coordinates && route.coordinates.length > 0) {
+                  var polyline = L.polyline(route.coordinates, {
+                    color: '#10b981', // emerald-500
+                    weight: 5,
+                    opacity: 0.8,
+                    lineJoin: 'round'
+                  }).addTo(map);
+                  
+                  map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+                } else {
+                  var bounds = L.latLngBounds([
+                    [route.from.lat, route.from.lon],
+                    [route.to.lat, route.to.lon]
+                  ]);
+                  map.fitBounds(bounds, { padding: [50, 50] });
+                }
+              }
+            } else if (event.data.type === 'SET_TILE') {
+              if (event.data.mode === 'satellite') {
+                map.removeLayer(streets);
+                satellite.addTo(map);
+              } else {
+                map.removeLayer(satellite);
+                streets.addTo(map);
+              }
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `;
+  }, []);
+
+  // Post message to map iframe when coordinates or map mode changes
+  useEffect(() => {
+    if (mapRef.current && mapRef.current.contentWindow && selectedFrom.lat && selectedTo.lat) {
+      const timer = setTimeout(() => {
+        mapRef.current?.contentWindow?.postMessage({
+          type: 'UPDATE_ROUTE',
+          from: selectedFrom,
+          to: selectedTo,
+          coordinates: routeCoordinates
+        }, '*');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedFrom, selectedTo, routeCoordinates, mapMode]);
+
+  useEffect(() => {
+    if (mapRef.current && mapRef.current.contentWindow) {
+      mapRef.current.contentWindow.postMessage({
+        type: 'SET_TILE',
+        mode: mapMode
+      }, '*');
+    }
+  }, [mapMode]);
 
   // If destination not found, fallback
   if (!destination) {
@@ -99,32 +534,27 @@ const BookingPage = () => {
     );
   }
 
-  const calculateFare = (pricePerKm: number, capacity: number, isTempo: boolean) => {
-    const distance = destination.distanceKm;
-    // For Outstation: One-way is base, Round-trip is roughly 1.8x (standard practice)
-    const multiplier = tripType === "round-trip" ? 1.8 : 1;
+  // Simplified and corrected fare calculation based on requirements
+  const calculateFare = (pricePerKm: number) => {
+    const distance = calculatedDistance || destination.distanceKm;
+    const multiplier = tripType === "round-trip" ? 2 : 1;
     const totalKm = distance * multiplier;
-    const baseFare = totalKm * pricePerKm;
-    const driverAllowance = tripType === "round-trip" ? 500 : 300;
-    const total = Math.ceil((baseFare + driverAllowance) / 50) * 50; // Round to nearest 50
-
-    if (isTempo) {
-      return {
-        total: total.toLocaleString(),
-        perPerson: Math.ceil(total / capacity).toLocaleString()
-      };
-    }
-    return { total: total.toLocaleString() };
+    const total = Math.ceil(totalKm * pricePerKm);
+    return {
+      total: total,
+      totalKm: totalKm
+    };
   };
 
   const totalAmount = useMemo(() => {
     if (!selectedVehicle) return 0;
-    const fares = calculateFare(Number(selectedVehicle.pricePerKm), Number(selectedVehicle.pax), selectedVehicle.type.toLowerCase().includes("tempo"));
-    if (selectedVehicle.type.toLowerCase().includes("tempo") && Object.keys(selectedSeats).length > 0) {
-      return parseInt(fares.perPerson?.replace(/,/g, "") || "0") * Object.keys(selectedSeats).length;
+    const fares = calculateFare(Number(selectedVehicle.pricePerKm));
+    if (selectedVehicle.slug.includes("tempo") || selectedVehicle.slug.includes("urbania")) {
+      const perSeat = Math.ceil(fares.total / Number(selectedVehicle.pax));
+      return perSeat * Object.keys(selectedSeats).length;
     }
-    return parseInt(fares.total.replace(/,/g, ""));
-  }, [selectedVehicle, selectedSeats, tripType]);
+    return fares.total;
+  }, [selectedVehicle, selectedSeats, calculatedDistance, tripType]);
 
   const partPayAmount = Math.ceil(totalAmount * 0.3);
 
@@ -161,28 +591,269 @@ const BookingPage = () => {
   };
 
   // ---------------------------------------------------------
+  // RENDER AIRPORT LAYOUT HEADER FORM
+  // ---------------------------------------------------------
+  const renderAirportBookingBar = () => {
+    return (
+      <div className="bg-white rounded-[2.5rem] p-6 lg:p-8 border border-slate-100 shadow-xl relative z-30 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+          {/* Pickup Location */}
+          <div className="lg:col-span-3 space-y-3 relative">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Pickup Location</label>
+            <div className="relative group">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Enter area, city or pincode"
+                value={fromSearch}
+                onFocus={() => setShowFromSuggestions(true)}
+                onChange={(e) => {
+                  setFromSearch(e.target.value);
+                  setShowFromSuggestions(true);
+                }}
+                onBlur={() => setTimeout(() => setShowFromSuggestions(false), 250)}
+                disabled={airportTrip === "from-airport"}
+                className={cn(
+                  "w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-10 text-sm font-black focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900",
+                  airportTrip === "from-airport" && "opacity-75 cursor-not-allowed bg-slate-100"
+                )}
+              />
+              {fromSearch && airportTrip !== "from-airport" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFromSearch("");
+                    setSelectedFrom({ name: "", lat: 0, lon: 0 });
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 hover:text-rose-500 flex items-center justify-center font-bold text-lg"
+                >
+                  ×
+                </button>
+              )}
+
+              <AnimatePresence>
+                {showFromSuggestions && fromSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[110] max-h-60 overflow-y-auto no-scrollbar"
+                  >
+                    {fromSuggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedFrom({
+                            name: s.display_name,
+                            lat: parseFloat(s.lat),
+                            lon: parseFloat(s.lon)
+                          });
+                          setFromSearch(s.display_name);
+                          setShowFromSuggestions(false);
+                        }}
+                        className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/item border-b border-slate-50 last:border-b-0 text-slate-800"
+                      >
+                        <div className="flex flex-col flex-1 pr-4 min-w-0">
+                          <span className="text-xs font-bold truncate">{s.display_name}</span>
+                          <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">
+                            {s.address?.postcode ? `PIN: ${s.address.postcode} | ` : ''}
+                            {s.address?.village || s.address?.suburb || s.address?.city || s.address?.state || 'Location'}
+                          </span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-emerald-500 shrink-0" />
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Drop Location */}
+          <div className="lg:col-span-3 space-y-3 relative">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Drop Location</label>
+            <div className="relative group">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Enter area, city or pincode"
+                value={toSearch}
+                onFocus={() => setShowToSuggestions(true)}
+                onChange={(e) => {
+                  setToSearch(e.target.value);
+                  setShowToSuggestions(true);
+                }}
+                onBlur={() => setTimeout(() => setShowToSuggestions(false), 250)}
+                disabled={airportTrip === "to-airport"}
+                className={cn(
+                  "w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-10 text-sm font-black focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900",
+                  airportTrip === "to-airport" && "opacity-75 cursor-not-allowed bg-slate-100"
+                )}
+              />
+              {toSearch && airportTrip !== "to-airport" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setToSearch("");
+                    setSelectedTo({ name: "", lat: 0, lon: 0 });
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 hover:text-rose-500 flex items-center justify-center font-bold text-lg"
+                >
+                  ×
+                </button>
+              )}
+
+              <AnimatePresence>
+                {showToSuggestions && toSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[110] max-h-60 overflow-y-auto no-scrollbar"
+                  >
+                    {toSuggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTo({
+                            name: s.display_name,
+                            lat: parseFloat(s.lat),
+                            lon: parseFloat(s.lon)
+                          });
+                          setToSearch(s.display_name);
+                          setShowToSuggestions(false);
+                        }}
+                        className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/item border-b border-slate-50 last:border-b-0 text-slate-800"
+                      >
+                        <div className="flex flex-col flex-1 pr-4 min-w-0">
+                          <span className="text-xs font-bold truncate">{s.display_name}</span>
+                          <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">
+                            {s.address?.postcode ? `PIN: ${s.address.postcode} | ` : ''}
+                            {s.address?.village || s.address?.suburb || s.address?.city || s.address?.state || 'Location'}
+                          </span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-emerald-500 shrink-0" />
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Trip Direction */}
+          <div className="lg:col-span-3 space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Trip Direction</label>
+            <div className="flex bg-slate-50 border border-slate-250 p-1 rounded-2xl w-full relative h-16 items-center">
+              <div
+                className={cn(
+                  "absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-gradient-orange rounded-xl shadow-lg z-0 transition-all duration-300",
+                  airportTrip === "to-airport" ? "translate-x-full" : "translate-x-0"
+                )}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setAirportTrip("from-airport");
+                  setFromSearch("Visakhapatnam International Airport");
+                  setSelectedFrom({ name: "Visakhapatnam International Airport", lat: 17.7244, lon: 83.2245 });
+                  setToSearch("");
+                  setSelectedTo({ name: "", lat: 0, lon: 0 });
+                }}
+                className={cn(
+                  "flex-1 text-[10px] font-black uppercase tracking-widest z-10 transition-colors duration-300 text-center h-full flex items-center justify-center",
+                  airportTrip === "from-airport" ? "text-white font-extrabold" : "text-slate-400 font-bold hover:text-slate-600"
+                )}
+              >
+                From Airport
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAirportTrip("to-airport");
+                  setToSearch("Visakhapatnam International Airport");
+                  setSelectedTo({ name: "Visakhapatnam International Airport", lat: 17.7244, lon: 83.2245 });
+                  setFromSearch("");
+                  setSelectedFrom({ name: "", lat: 0, lon: 0 });
+                }}
+                className={cn(
+                  "flex-1 text-[10px] font-black uppercase tracking-widest z-10 transition-colors duration-300 text-center h-full flex items-center justify-center",
+                  airportTrip === "to-airport" ? "text-white font-extrabold" : "text-slate-400 font-bold hover:text-slate-600"
+                )}
+              >
+                To Airport
+              </button>
+            </div>
+          </div>
+
+          {/* Departure Date */}
+          <div className="lg:col-span-3 space-y-3 relative">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Departure</label>
+            <div className="relative group">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
+              <input
+                type="datetime-local"
+                value={pickupDate}
+                onChange={(e) => setPickupDate(e.target.value)}
+                className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 text-sm font-black focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------
   // RENDER TOUR LAYOUT (Gallery + Tabs)
   // ---------------------------------------------------------
   const renderTripHeader = () => (
-    <div className="bg-white rounded-[2.5rem] p-6 lg:p-8 border border-slate-100 shadow-sm flex items-center justify-between gap-6 overflow-hidden mb-10 group/header">
-      <div className="flex flex-1 items-center gap-8 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-sm lg:text-base font-black text-slate-900 uppercase tracking-tight">Visakhapatnam</span>
-          <ArrowRight className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span className="text-sm lg:text-base font-black text-slate-900 uppercase tracking-tight">{destination.name}</span>
+    <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-8 group/header">
+      <div className="flex items-center justify-between gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <span className="text-sm md:text-base font-black text-slate-900 uppercase tracking-tight truncate max-w-[120px] sm:max-w-[200px]">
+            {selectedFrom.name.split(",")[0]}
+          </span>
+          <ArrowRight className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+          <span className="text-sm md:text-base font-black text-slate-900 uppercase tracking-tight truncate max-w-[120px] sm:max-w-[200px]">
+            {selectedTo.name.split(",")[0]}
+          </span>
         </div>
 
-        <div className="h-10 w-px bg-slate-100 shrink-0" />
+        <button
+          onClick={() => setIsEditingDates(!isEditingDates)}
+          className={cn(
+            "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0 md:hidden",
+            isEditingDates ? "bg-emerald-600 text-white rotate-90" : "bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+          )}
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+      </div>
 
-        <div className="flex items-center gap-10 shrink-0">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</span>
-            <span className="text-xs font-black text-slate-900 uppercase mt-0.5">{pickupDate ? new Date(pickupDate).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}</span>
+      <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+        <div className="hidden md:block h-8 w-px bg-slate-100 shrink-0" />
+
+        <div className="grid grid-cols-2 gap-4 w-full md:w-auto md:flex md:items-center md:gap-8">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</span>
+            <span className="text-[10px] md:text-xs font-black text-slate-800 uppercase mt-0.5 truncate">
+              {pickupDate ? new Date(pickupDate).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}
+            </span>
           </div>
-          {tripType === "round-trip" && (
-            <div className="flex flex-col border-l border-slate-100 pl-10">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Return Date</span>
-              <span className="text-xs font-black text-slate-900 uppercase mt-0.5">{returnDate ? new Date(returnDate).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}</span>
+          {tripType === "round-trip" ? (
+            <div className="flex flex-col border-l border-slate-100 pl-4 md:pl-8 min-w-0">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Return Date</span>
+              <span className="text-[10px] md:text-xs font-black text-slate-800 uppercase mt-0.5 truncate">
+                {returnDate ? new Date(returnDate).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col border-l border-slate-100 pl-4 md:pl-8">
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Trip Mode</span>
+              <span className="text-[10px] md:text-xs font-black text-emerald-600 uppercase mt-0.5">One Way</span>
             </div>
           )}
         </div>
@@ -191,7 +862,7 @@ const BookingPage = () => {
       <button
         onClick={() => setIsEditingDates(!isEditingDates)}
         className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0",
+          "w-12 h-12 rounded-xl items-center justify-center transition-all duration-500 shrink-0 hidden md:flex",
           isEditingDates ? "bg-emerald-600 text-white rotate-90" : "bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
         )}
       >
@@ -207,106 +878,135 @@ const BookingPage = () => {
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="bg-white rounded-[2rem] p-8 border border-emerald-500/20 shadow-xl overflow-hidden mb-10"
+          className="bg-white rounded-[2rem] p-8 border border-emerald-500/20 shadow-xl overflow-visible mb-10 relative z-30"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Change Destination</label>
+            {/* Pickup Search */}
+            <div className="space-y-4 relative">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Location</label>
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600" />
                 <input
                   type="text"
-                  placeholder="Type city name..."
-                  value={destSearch}
-                  onFocus={() => setShowDestSuggestions(true)}
+                  placeholder="Search pickup city, area, village or PIN..."
+                  value={fromSearch}
+                  onFocus={() => setShowFromSuggestions(true)}
                   onChange={(e) => {
-                    setDestSearch(e.target.value);
-                    setShowDestSuggestions(true);
+                    setFromSearch(e.target.value);
+                    setShowFromSuggestions(true);
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && destSearch.trim()) {
-                      const slug = destSearch.toLowerCase().trim().replace(/\s+/g, "-");
-                      router.push(`/booking/${slug}`);
-                      setShowDestSuggestions(false);
-                    }
-                  }}
-                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all"
+                  onBlur={() => setTimeout(() => setShowFromSuggestions(false), 200)}
+                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900"
                 />
 
                 <AnimatePresence>
-                  {showDestSuggestions && (
+                  {showFromSuggestions && fromSuggestions.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[200] max-h-60 overflow-y-auto no-scrollbar"
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[100] max-h-60 overflow-y-auto no-scrollbar"
                     >
-                      {destSearch.trim() && !Object.entries(DESTINATIONS).some(([slug, dest]) => dest.name.toLowerCase() === destSearch.toLowerCase()) && (
+                      {fromSuggestions.map((s, idx) => (
                         <button
+                          key={idx}
+                          type="button"
                           onClick={() => {
-                            const slug = destSearch.toLowerCase().trim().replace(/\s+/g, "-");
-                            router.push(`/booking/${slug}`);
-                            setShowDestSuggestions(false);
+                            setSelectedFrom({
+                              name: s.display_name,
+                              lat: parseFloat(s.lat),
+                              lon: parseFloat(s.lon)
+                            });
+                            setFromSearch(s.display_name);
+                            setShowFromSuggestions(false);
                           }}
-                          className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/custom bg-emerald-50/30"
+                          className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/item border-b border-slate-50 last:border-b-0"
                         >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-slate-700">Search for "{destSearch}"</span>
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Custom Destination</span>
+                          <div className="flex flex-col flex-1 pr-4">
+                            <span className="text-xs font-bold text-slate-800 line-clamp-1">{s.display_name}</span>
+                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">
+                              {s.address?.postcode ? `PIN: ${s.address.postcode} | ` : ''}
+                              {s.address?.village || s.address?.suburb || s.address?.city || s.address?.state || 'Location'}
+                            </span>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-emerald-500" />
+                          <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-emerald-500 shrink-0" />
                         </button>
-                      )}
-
-                      {Object.entries(DESTINATIONS)
-                        .filter(([slug, dest]) => dest.name.toLowerCase().includes(destSearch.toLowerCase()))
-                        .map(([slug, dest]) => (
-                          <button
-                            key={slug}
-                            onClick={() => {
-                              router.push(`/booking/${slug}`);
-                              setShowDestSuggestions(false);
-                              setDestSearch(dest.name);
-                            }}
-                            className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/item"
-                          >
-                            <span className="text-sm font-bold text-slate-700 group-hover/item:text-emerald-600">{dest.name}</span>
-                            <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-emerald-500" />
-                          </button>
-                        ))}
-                      {Object.entries(DESTINATIONS).filter(([slug, dest]) => dest.name.toLowerCase().includes(destSearch.toLowerCase())).length === 0 && (
-                        <div className="px-6 py-4 text-xs font-bold text-slate-400 italic">No matching cities found...</div>
-                      )}
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
+            </div>
 
-              {/* Mobile Quick Links */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-                {["srikakulam", "vizianagaram", "annavaram", "kakinada", "rajahmundry"].map(slug => (
-                  <button
-                    key={slug}
-                    onClick={() => {
-                      router.push(`/booking/${slug}`);
-                      setIsEditingDates(false);
-                    }}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100 text-[10px] font-black text-emerald-600 uppercase tracking-widest whitespace-nowrap active:scale-95 transition-transform"
-                  >
-                    {slug.charAt(0).toUpperCase() + slug.slice(1)}
-                  </button>
-                ))}
+            {/* Drop Search */}
+            <div className="space-y-4 relative">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drop Location</label>
+              <div className="relative group">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500" />
+                <input
+                  type="text"
+                  placeholder="Search drop city, area, village or PIN..."
+                  value={toSearch}
+                  onFocus={() => setShowToSuggestions(true)}
+                  onChange={(e) => {
+                    setToSearch(e.target.value);
+                    setShowToSuggestions(true);
+                  }}
+                  onBlur={() => setTimeout(() => setShowToSuggestions(false), 200)}
+                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900"
+                />
+
+                <AnimatePresence>
+                  {showToSuggestions && toSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[100] max-h-60 overflow-y-auto no-scrollbar"
+                    >
+                      {toSuggestions.map((s, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTo({
+                              name: s.display_name,
+                              lat: parseFloat(s.lat),
+                              lon: parseFloat(s.lon)
+                            });
+                            setToSearch(s.display_name);
+                            setShowToSuggestions(false);
+                          }}
+                          className="w-full px-6 py-4 text-left hover:bg-emerald-50 flex items-center justify-between group/item border-b border-slate-50 last:border-b-0"
+                        >
+                          <div className="flex flex-col flex-1 pr-4">
+                            <span className="text-xs font-bold text-slate-800 line-clamp-1">{s.display_name}</span>
+                            <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest mt-0.5">
+                              {s.address?.postcode ? `PIN: ${s.address.postcode} | ` : ''}
+                              {s.address?.village || s.address?.suburb || s.address?.city || s.address?.state || 'Location'}
+                            </span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-emerald-500 shrink-0" />
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
+
+            {/* Pickup Date */}
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Date & Time</label>
               <input
                 type="datetime-local"
                 value={pickupDate}
                 onChange={(e) => setPickupDate(e.target.value)}
-                className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all"
+                className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900"
               />
             </div>
+            
+            {/* Return Date */}
             {tripType === "round-trip" && (
               <div className="space-y-4">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Return Date & Time</label>
@@ -314,13 +1014,13 @@ const BookingPage = () => {
                   type="datetime-local"
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
-                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all"
+                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-bold focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900"
                 />
               </div>
             )}
           </div>
           <div className="mt-8 flex flex-col md:flex-row gap-4">
-            <button onClick={() => setIsEditingDates(false)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">Save Changes</button>
+            <button onClick={() => setIsEditingDates(false)} className="w-full md:w-auto px-10 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">Confirm Locations</button>
             <button onClick={() => setIsEditingDates(false)} className="w-full md:w-auto px-10 py-4 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border border-slate-100">Cancel</button>
           </div>
         </motion.div>
@@ -377,6 +1077,12 @@ const BookingPage = () => {
           </div>
         </div>
       </div>
+
+      {isTempoMode && (
+        <div className="pt-16 border-t border-slate-100">
+          <DestinationsSection />
+        </div>
+      )}
     </div>
   );
 
@@ -385,8 +1091,12 @@ const BookingPage = () => {
   // ---------------------------------------------------------
   const renderOutstationLayout = () => (
     <div className="space-y-10">
-      {renderTripHeader()}
-      {renderEditPanel()}
+      {isAirportMode ? renderAirportBookingBar() : (
+        <>
+          {renderTripHeader()}
+          {renderEditPanel()}
+        </>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-10">
         <div className="lg:w-[65%] space-y-10">
@@ -396,17 +1106,54 @@ const BookingPage = () => {
           </div>
 
           {/* Map Preview */}
-          <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm p-3">
+          <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm p-3 relative z-10">
             <div className="relative h-[300px] md:h-[400px] rounded-[2rem] bg-slate-100 overflow-hidden group">
-              <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s-a+285ae5(83.2185,17.6868),pin-s-b+ff5722(83.4,17.8)/auto/1200x600?access_token=pk.eyJ1IjoicHJhZ2huZWFyIiwiYSI6ImNrcWwwamU1czAwaDUyb28waWwwamU1czAifQ.F_F0_v_v_v_v_v_v_v_v_v_v')] bg-cover bg-center" />
-              <div className="absolute top-6 left-6 flex bg-white/90 backdrop-blur-md p-1 rounded-2xl shadow-2xl border border-white">
-                <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-600/20">Map</button>
-                <button className="px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors">Satellite</button>
+              <iframe
+                ref={mapRef}
+                srcDoc={mapSrcDoc}
+                className="w-full h-full border-none rounded-[2rem]"
+                title="Route Map"
+              />
+              
+              {isLoadingRoute && (
+                <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] flex items-center justify-center z-20 transition-all rounded-[2rem]">
+                  <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin" />
+                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Calculating Route...</span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="absolute top-6 left-6 flex bg-white/90 backdrop-blur-md p-1 rounded-2xl shadow-2xl border border-white z-20">
+                <button
+                  type="button"
+                  onClick={() => setMapMode("map")}
+                  className={cn(
+                    "px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all",
+                    mapMode === "map"
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                      : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  Map
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMapMode("satellite")}
+                  className={cn(
+                    "px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all",
+                    mapMode === "satellite"
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                      : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  Satellite
+                </button>
               </div>
             </div>
             <div className="p-6">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center lg:text-left">
-                Rates for {destination.distanceKm} Kms approx distance | {destination.duration} approx time
+                Rates for {calculatedDistance} Kms approx distance | {calculatedDuration} approx time
               </p>
             </div>
           </div>
@@ -418,8 +1165,10 @@ const BookingPage = () => {
 
           {/* Vertical Vehicle List */}
           <div className="space-y-6">
-            {Object.values(FLEET_DATA).slice(0, 5).map((vehicle) => {
-              const fares = calculateFare(Number(vehicle.pricePerKm), Number(vehicle.pax), false);
+            {Object.values(FLEET_DATA)
+              .filter((vehicle) => !isTempoMode || vehicle.slug === "tempo-traveller" || vehicle.slug === "urbania")
+              .map((vehicle) => {
+              const fares = calculateFare(Number(vehicle.pricePerKm));
               const isExpanded = expandedVehicle === vehicle.slug;
 
               return (
@@ -449,7 +1198,13 @@ const BookingPage = () => {
                     <div className="flex flex-col items-center md:items-end gap-6">
                       <div className="text-right">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estimated Fare</p>
-                        <p className="text-3xl font-black text-slate-900 tracking-tighter">₹{fares.total}</p>
+                        <p className="text-3xl font-black text-emerald-600 tracking-tighter">₹{fares.total.toLocaleString()}</p>
+                        <p className="text-[10px] font-black text-slate-500 mt-1">
+                          ₹{Math.ceil(fares.total / Number(vehicle.pax)).toLocaleString()} <span className="text-[9px] text-slate-400 font-bold">/ head</span>
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-400 mt-0.5">
+                          {fares.totalKm} KM @ ₹{vehicle.pricePerKm}/KM
+                        </p>
                       </div>
                       <button
                         onClick={() => handleBookNow(vehicle)}
@@ -492,7 +1247,7 @@ const BookingPage = () => {
                 <div className="bg-white rounded-[3rem] p-10 lg:p-14 border border-slate-100 shadow-sm">
                   <SeatSelection
                     totalSeats={parseInt(selectedVehicle.pax)}
-                    pricePerSeat={parseInt(calculateFare(Number(selectedVehicle.pricePerKm), Number(selectedVehicle.pax), true).perPerson?.replace(/,/g, "") || "0")}
+                    pricePerSeat={Math.ceil(calculateFare(Number(selectedVehicle.pricePerKm)).total / Number(selectedVehicle.pax))}
                     onBack={() => setBookingStep("selection")}
                     onConfirm={(seats) => {
                       setSelectedSeats(seats);
@@ -526,6 +1281,12 @@ const BookingPage = () => {
           </div>
         </div>
       </div>
+
+      {isTempoMode && (
+        <div className="pt-16 border-t border-slate-100">
+          <DestinationsSection />
+        </div>
+      )}
     </div>
   );
 
@@ -605,21 +1366,27 @@ const BookingPage = () => {
 
   const renderPassengerForms = () => (
     <div className="space-y-10">
-      {/* Dynamic Passenger Forms per Seat */}
-      {Object.keys(selectedSeats).length > 0 && (
-        <div className="bg-white rounded-[3rem] p-10 lg:p-14 border border-slate-100 shadow-sm space-y-12">
-          <div className="flex items-center gap-6">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <Users className="w-7 h-7" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Passenger Information</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Enter details for {Object.keys(selectedSeats).length} Travelers</p>
-            </div>
+      {/* Dynamic Passenger Forms or Primary Traveler details */}
+      <div className="bg-white rounded-[3rem] p-10 lg:p-14 border border-slate-100 shadow-sm space-y-12">
+        <div className="flex items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <Users className="w-7 h-7" />
           </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+              {Object.keys(selectedSeats).length > 0 ? "Passenger Information" : "Primary Guest Details"}
+            </h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+              {Object.keys(selectedSeats).length > 0 
+                ? `Enter details for ${Object.keys(selectedSeats).length} Travelers` 
+                : "Enter details for the primary passenger"}
+            </p>
+          </div>
+        </div>
 
-          <div className="space-y-10">
-            {Object.entries(selectedSeats).map(([seatNum, gender], idx) => (
+        <div className="space-y-10">
+          {Object.keys(selectedSeats).length > 0 ? (
+            Object.entries(selectedSeats).map(([seatNum, gender], idx) => (
               <div key={seatNum} className="p-8 rounded-[2rem] bg-[#F8FAFC] border border-slate-100 space-y-6">
                 <div className="flex items-center justify-between">
                   <span className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">Seat {seatNum} — {gender}</span>
@@ -643,10 +1410,33 @@ const BookingPage = () => {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          ) : (
+            <div className="p-8 rounded-[2rem] bg-[#F8FAFC] border border-slate-100 space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">Primary Passenger</span>
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
+                  <input type="text" className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500" placeholder="Enter name" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Age</label>
+                  <input type="number" className="w-full h-14 bg-[#F8FAFC] border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500" placeholder="Age" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Gender</label>
+                  <select className="w-full h-14 bg-[#F8FAFC] border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="bg-white rounded-[3rem] p-10 lg:p-14 border border-slate-100 shadow-sm space-y-14">
         <div className="space-y-10">
@@ -770,12 +1560,31 @@ const BookingPage = () => {
     <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl space-y-8">
       <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Select Vehicle</h3>
       <div className="space-y-4">
-        {Object.values(FLEET_DATA).slice(0, 7).map((vehicle) => {
-          const fares = calculateFare(Number(vehicle.pricePerKm), Number(vehicle.pax), vehicle.type.toLowerCase().includes("tempo"));
+        {Object.values(FLEET_DATA)
+          .filter((vehicle) => !isTempoMode || vehicle.slug === "tempo-traveller" || vehicle.slug === "urbania")
+          .map((vehicle) => {
+          const fares = calculateFare(Number(vehicle.pricePerKm));
           return (
             <button key={vehicle.slug} onClick={() => handleBookNow(vehicle)} className={cn("w-full p-6 rounded-[2rem] border-2 transition-all flex items-center justify-between group", selectedVehicle?.slug === vehicle.slug ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 hover:border-emerald-500/30")}>
-              <div className="flex items-center gap-4"><div className="w-16 h-12 relative bg-slate-50 rounded-xl overflow-hidden"><Image src={vehicle.images[0]} alt={vehicle.model} fill className="object-contain p-2" /></div><div className="text-left"><p className="text-[13px] font-black text-slate-900 uppercase">{vehicle.model}</p><div className="flex items-center gap-2 mt-1"><span className="text-[8px] font-black text-slate-400 uppercase">{vehicle.pax} Seats</span><span className="w-1 h-1 bg-slate-300 rounded-full" /><span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">AC</span></div></div></div>
-              <p className="text-sm font-black text-slate-900 tracking-tight">₹{fares.total}</p>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-12 relative bg-slate-50 rounded-xl overflow-hidden">
+                  <Image src={vehicle.images[0]} alt={vehicle.model} fill className="object-contain p-2" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[13px] font-black text-slate-900 uppercase">{vehicle.model}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[8px] font-black text-slate-400 uppercase">{vehicle.pax} Seats</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">₹{vehicle.pricePerKm}/KM</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">₹{Math.ceil(fares.total / Number(vehicle.pax))}/head</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-black text-slate-900 tracking-tight">₹{fares.total.toLocaleString()}</p>
+                <p className="text-[8px] font-bold text-slate-400 mt-0.5">₹{Math.ceil(fares.total / Number(vehicle.pax))}/seat</p>
+              </div>
             </button>
           );
         })}
@@ -783,97 +1592,172 @@ const BookingPage = () => {
     </div>
   );
 
-  const renderBookingSummarySidebar = () => (
-    <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl space-y-10">
-      <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Booking Summary</h3>
-      <div className="space-y-8">
-        <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <Calendar className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trip Type</p>
-            <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{destination.type === "tour" ? "Tour" : `Outstation (${tripType === 'one-way' ? 'One Way' : 'Round Trip'})`}</p>
-          </div>
-          <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-        </div>
-
-        <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <MapPin className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup</p>
-            <p className="text-sm font-black text-slate-900 uppercase mt-0.5">Visakhapatnam</p>
-          </div>
-          <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-        </div>
-
-        <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <MapPin className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Drop-off</p>
-            <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{destination.name}</p>
-          </div>
-          <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-        </div>
-
-        <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <Map className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Distance</p>
-            <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{tripType === "round-trip" ? Number(destination.distanceKm) * 2 : destination.distanceKm} KM</p>
-          </div>
-          <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-        </div>
-
-        <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <Calendar className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</p>
-            <p className="text-sm font-black text-slate-900 mt-0.5">{new Date(pickupDate).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-          </div>
-          <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-        </div>
-
-        {tripType === "round-trip" && (
+  const renderBookingSummarySidebar = () => {
+    const defaultVehicle = isTempoMode 
+      ? Object.values(FLEET_DATA).find(v => v.slug === "tempo-traveller") || Object.values(FLEET_DATA)[0]
+      : Object.values(FLEET_DATA)[0];
+    const activeVehicle = selectedVehicle || defaultVehicle;
+    const fares = calculateFare(Number(activeVehicle.pricePerKm));
+    const isTempo = activeVehicle.slug.includes("tempo") || activeVehicle.slug.includes("urbania");
+    const formattedDistance = calculatedDistance * (tripType === "round-trip" ? 2 : 1);
+    
+    return (
+      <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl space-y-10">
+        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Booking Summary</h3>
+        <div className="space-y-8">
           <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
               <Calendar className="w-5 h-5" />
             </div>
-            <div className="flex-1">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Return Date</p>
-              <p className="text-sm font-black text-slate-900 mt-0.5">{new Date(returnDate).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trip Type</p>
+              <p className="text-sm font-black text-slate-900 uppercase mt-0.5">
+                {isAirportMode 
+                  ? `Airport Transfer (${airportTrip === 'from-airport' ? 'From Airport' : 'To Airport'})`
+                  : destination.type === "tour" ? "Tour" : `Outstation (${tripType === 'one-way' ? 'One Way' : 'Round Trip'})`
+                }
+              </p>
             </div>
-            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
           </div>
-        )}
-        {selectedVehicle && (
-          <div className="p-5 rounded-[2rem] border border-emerald-500 bg-emerald-50/30 flex items-center gap-5 relative">
-            <div className="w-20 h-14 relative bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm"><Image src={selectedVehicle.images[0]} alt={selectedVehicle.model} fill className="object-contain" /></div>
-            <div><p className="text-sm font-black text-slate-900 uppercase">{selectedVehicle.model}</p><div className="flex items-center gap-3 mt-1 text-[8px] font-black text-slate-400 uppercase tracking-widest"><span className="flex items-center gap-1"><Users className="w-3 h-3 text-emerald-500" /> {selectedVehicle.pax} Seats</span><span className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-500" /> AC</span></div></div>
-            <CheckCircle2 className="w-6 h-6 text-emerald-600 absolute -top-2 -right-2 bg-white rounded-full shadow-lg" />
+
+          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup</p>
+              <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{selectedFrom.name}</p>
+            </div>
+            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
           </div>
-        )}
-        {!selectedVehicle && (
-          <div className="p-8 rounded-[2rem] bg-slate-50 border border-dashed border-slate-200 text-center">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select a vehicle to see fare details</p>
+
+          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Drop-off</p>
+              <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{selectedTo.name}</p>
+            </div>
+            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
           </div>
-        )}
+
+          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <Map className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Distance</p>
+              <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{formattedDistance} KM</p>
+            </div>
+            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+          </div>
+
+          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</p>
+              <p className="text-sm font-black text-slate-900 mt-0.5">{pickupDate ? new Date(pickupDate).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}</p>
+            </div>
+            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+          </div>
+
+          {tripType === "round-trip" && (
+            <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Return Date</p>
+                <p className="text-sm font-black text-slate-900 mt-0.5">{returnDate ? new Date(returnDate).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}</p>
+              </div>
+              <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+            </div>
+          )}
+          
+          {selectedVehicle && (
+            <div className="p-5 rounded-[2rem] border border-emerald-500 bg-emerald-50/30 flex items-center gap-5 relative">
+              <div className="w-20 h-14 relative bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm shrink-0">
+                <Image src={selectedVehicle.images[0]} alt={selectedVehicle.model} fill className="object-contain" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-slate-900 uppercase truncate">{selectedVehicle.model}</p>
+                <div className="flex items-center gap-3 mt-1 text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="flex items-center gap-1"><Users className="w-3 h-3 text-emerald-500" /> {selectedVehicle.pax} Seats</span>
+                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-500" /> ₹{selectedVehicle.pricePerKm}/KM</span>
+                </div>
+              </div>
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 absolute -top-2 -right-2 bg-white rounded-full shadow-lg" />
+            </div>
+          )}
+          
+          {!selectedVehicle && (
+            <div className="p-8 rounded-[2rem] bg-slate-50 border border-dashed border-slate-200 text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select a vehicle to see fare details</p>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-10 border-t border-slate-100 space-y-6">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Distance</span>
+            <span className="text-sm font-black text-slate-900">{formattedDistance} KM</span>
+          </div>
+          {selectedVehicle && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vehicle Name</span>
+                <span className="text-sm font-black text-slate-900 uppercase">{selectedVehicle.model}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price per KM</span>
+                <span className="text-sm font-black text-slate-900">₹{selectedVehicle.pricePerKm}/KM</span>
+              </div>
+              
+              {(selectedVehicle.slug.includes("tempo") || selectedVehicle.slug.includes("urbania")) && (
+                <>
+                  <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Price Per Head</span>
+                    <span className="text-sm font-black text-emerald-600">
+                      ₹{Math.ceil(calculateFare(Number(selectedVehicle.pricePerKm)).total / Number(selectedVehicle.pax)).toLocaleString()} / seat
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seats Selected</span>
+                    <span className="text-sm font-black text-slate-900">
+                      {Object.keys(selectedSeats).length > 0 
+                        ? `${Object.keys(selectedSeats).length} Seats (${Object.keys(selectedSeats).join(", ")})` 
+                        : "0 Seats (Select below)"
+                      }
+                    </span>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trip Type</span>
+            <span className="text-sm font-black text-slate-900 uppercase">
+              {isAirportMode 
+                ? `Airport (${airportTrip === 'from-airport' ? 'From' : 'To'})`
+                : tripType === 'one-way' ? 'One Way' : 'Round Trip'
+              }
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-black text-slate-900 uppercase tracking-tighter">Total Price</span>
+            <span className="text-3xl font-black text-emerald-600 tracking-tight">₹{totalAmount.toLocaleString()}</span>
+          </div>
+          <button className="w-full py-4 rounded-2xl bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 border border-slate-100 hover:bg-emerald-50 transition-all">
+            <MessageCircle className="w-4 h-4" /> Share Summary on WhatsApp
+          </button>
+        </div>
       </div>
-      <div className="pt-10 border-t border-slate-100 space-y-6">
-        <div className="flex justify-between items-center"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Fare</span><span className="text-sm font-black text-slate-900">₹{totalAmount.toLocaleString()}</span></div>
-        <div className="flex justify-between items-center"><span className="text-lg font-black text-slate-900 uppercase tracking-tighter">Total Price</span><span className="text-3xl font-black text-slate-900 tracking-tight">₹{totalAmount.toLocaleString()}</span></div>
-        <button className="w-full py-4 rounded-2xl bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 border border-slate-100 hover:bg-emerald-50 transition-all"><MessageCircle className="w-4 h-4" /> Share Summary on WhatsApp</button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
@@ -905,6 +1789,18 @@ const BookingPage = () => {
         )}
       </AnimatePresence>
     </main>
+  );
+};
+
+const BookingPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="w-12 h-12 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin" />
+      </div>
+    }>
+      <BookingPageContent />
+    </Suspense>
   );
 };
 

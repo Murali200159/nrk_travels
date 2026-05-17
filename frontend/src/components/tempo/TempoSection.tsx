@@ -82,7 +82,7 @@ const TempoSection = () => {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   return (
-    <section className="py-24 bg-[#F8FAFC]">
+    <section id="tempo" className="py-24 bg-[#F8FAFC]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-20 space-y-4">

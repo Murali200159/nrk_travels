@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, Phone, ChevronDown, Car, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ const Navbar = () => {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out px-4 md:px-10",
+          "fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ease-in-out px-4 md:px-10",
           isScrolled ? "py-4" : "py-8"
         )}
       >
@@ -68,10 +69,18 @@ const Navbar = () => {
           {/* Logo */}
           <Link href={ROUTES.HOME} className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 group-hover:rotate-[360deg] transition-all duration-1000">
-                <Car className="w-6 h-6" />
+              <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-md flex items-center justify-center transition-all duration-500 group-hover:scale-105 active:scale-95">
+                <div className="relative w-full h-full">
+                  <Image 
+                    src="/images/logo.jpg" 
+                    alt="Vizag Taxi Logo" 
+                    fill 
+                    className="object-cover object-left scale-[1.35] -translate-x-[4%] transition-transform duration-700" 
+                    priority
+                  />
+                </div>
               </div>
-              <Sparkles className="absolute -top-2 -right-2 w-4 h-4 text-orange-500 animate-pulse" />
+              <Sparkles className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 animate-pulse" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-baseline gap-1">
@@ -79,13 +88,13 @@ const Navbar = () => {
                   "text-2xl font-display font-black tracking-tighter leading-none transition-colors duration-500",
                   "text-emerald-600"
                 )}>
-                  VIZAG
+                  NRK
                 </span>
                 <span className={cn(
                   "text-sm font-display font-black tracking-tighter leading-none transition-colors duration-500",
                   "text-orange-500"
                 )}>
-                  TAXI
+                  TRAVELS
                 </span>
               </div>
               <span className={cn(

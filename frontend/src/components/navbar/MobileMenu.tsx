@@ -82,7 +82,20 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
               >
                 Home
               </Link>
-              {NAV_LINKS.map((link) => {
+              {(() => {
+                const sortedLinks = [...NAV_LINKS];
+                const tourIndex = sortedLinks.findIndex(l => l.name === "Tour Packages");
+                const outIndex = sortedLinks.findIndex(l => l.name === "Outstation");
+                const orderedMobileLinks = [];
+                if (tourIndex !== -1) orderedMobileLinks.push(sortedLinks[tourIndex]);
+                if (outIndex !== -1) orderedMobileLinks.push(sortedLinks[outIndex]);
+                sortedLinks.forEach(link => {
+                  if (link.name !== "Tour Packages" && link.name !== "Outstation") {
+                    orderedMobileLinks.push(link);
+                  }
+                });
+                return orderedMobileLinks;
+              })().map((link) => {
                 const hasSubLinks = link.hasDropdown;
                 const isOpen = openDropdown === link.name;
                 const subLinks = getSubLinks(link.name);

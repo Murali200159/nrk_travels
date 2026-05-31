@@ -41,6 +41,7 @@ interface BookingFlowModalProps {
     pricePerKm: number;
     type: string;
     image: string;
+    pax?: string;
   };
   prefilledFromLocation?: string;
   prefilledToLocation?: string;
@@ -611,7 +612,7 @@ const BookingFlowModal = ({
 
   // Unified Fare Calculations
   const getCalculatedFare = (): { price: number; distance: number; time: string; breakdown: { base: number; bhatta: number; extraInfo?: string } } => {
-    const terms = getVehicleTerms(vehicle.slug, vehicle.model);
+    const terms = getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax);
     
     if (bookingMode === "day" && dayTripScope === "local") {
       const basePrice = getLocalPackagePrice(vehicle.slug || "", localPackage);

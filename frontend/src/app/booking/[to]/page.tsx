@@ -735,7 +735,7 @@ const BookingPageContent = () => {
   }
 
   // Simplified and corrected fare calculation based on requirements including Driver Bhatta
-  const calculateFare = (pricePerKm: number, slug?: string) => {
+  const calculateFare = (pricePerKm: number, slug: string, modelName?: string, pax?: string | number) => {
     const distance = calculatedDistance || destination.distanceKm;
     const multiplier = (tripType === "round-trip") ? 2 : 1;
     const totalKm = distance * multiplier;
@@ -752,7 +752,7 @@ const BookingPageContent = () => {
     }
 
     // Resolve vehicle terms for Bhatta
-    const terms = getVehicleTerms(slug);
+    const terms = getVehicleTerms(slug, modelName, pax);
     const bhatta = terms.driverBhatta * calculatedDays;
 
     const basePrice = Math.ceil(chargeKm * pricePerKm);
@@ -770,7 +770,7 @@ const BookingPageContent = () => {
 
   const totalAmount = useMemo(() => {
     if (!selectedVehicle) return 0;
-    return calculateFare(Number(selectedVehicle.pricePerKm), selectedVehicle.slug).total;
+    return calculateFare(Number(selectedVehicle.pricePerKm), selectedVehicle.slug, selectedVehicle.model, selectedVehicle.pax).total;
   }, [selectedVehicle, calculatedDistance, tripType, pickupDate, returnDate]);
 
   const partPayAmount = Math.ceil(totalAmount * 0.3);

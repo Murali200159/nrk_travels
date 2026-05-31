@@ -570,7 +570,7 @@ const FleetDetailsPage = () => {
 
   // Live Fare Calculator
   const sidebarFare = (() => {
-    const terms = getVehicleTerms(vehicle.slug, vehicle.model);
+    const terms = getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax);
     
     if (bookingMode === "day" && dayTripScope === "local") {
       const basePrice = getLocalPackagePrice(vehicle.slug || "", localPackage);
@@ -1031,8 +1031,8 @@ const FleetDetailsPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
-                    { type: "Local Trip", price: `₹${getLocalPackagePrice(vehicle.slug, "8 Hours / 80 KM").toLocaleString()}`, sub: "8 hrs / 80 km limit", extra: `Extra @ ₹${getVehicleTerms(vehicle.slug, vehicle.model).extraKm}/km`, icon: MapPin },
-                    { type: "Outstation", price: `₹${vehicle.pricePerKm}/km`, sub: `Min ${vehicle.minKm} km/day`, extra: `Driver allowance: ₹${getVehicleTerms(vehicle.slug, vehicle.model).driverBhatta}`, icon: Zap },
+                    { type: "Local Trip", price: `₹${getLocalPackagePrice(vehicle.slug, "8 Hours / 80 KM").toLocaleString()}`, sub: "8 hrs / 80 km limit", extra: `Extra @ ₹${getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax).extraKm}/km`, icon: MapPin },
+                    { type: "Outstation", price: `₹${vehicle.pricePerKm}/km`, sub: `Min ${vehicle.minKm} km/day`, extra: `Driver allowance: ₹${getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax).driverBhatta}`, icon: Zap },
                     { type: "Airport", price: "₹1,200", sub: "Transfer Package", extra: "Excluding toll & parking", icon: Clock }
                   ].map((rate, i) => (
                     <div key={i} className="group p-8 rounded-[2rem] bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-white hover:shadow-xl hover:shadow-emerald-600/5 transition-all duration-500 relative overflow-hidden">
@@ -1317,7 +1317,8 @@ const FleetDetailsPage = () => {
           model: vehicle.model,
           pricePerKm: Number(vehicle.pricePerKm),
           type: vehicle.type,
-          image: vehicle.images[0]
+          image: vehicle.images[0],
+          pax: vehicle.pax
         }}
         prefilledFromLocation={pickupLocation}
         prefilledToLocation={dropLocation}

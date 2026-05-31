@@ -55,7 +55,7 @@ export const calculateTourPrice = (tourSlug: string, vehicleSlug: string): numbe
 
   const pricePerKm = Number(vehicle.pricePerKm);
   const minKm = Number(vehicle.minKm);
-  const terms = getVehicleTerms(vehicleSlug);
+  const terms = getVehicleTerms(vehicleSlug, vehicle.model, vehicle.pax);
 
   // If local city tour
   if (tourSlug === "vizag-city-tour") {

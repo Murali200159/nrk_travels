@@ -10,6 +10,7 @@ import {
 import SectionReveal from "@/components/ui/SectionReveal";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { cn } from "@/lib/utils";
+import { submitContact } from "@/lib/api";
 
 const contactChannels = [
   {
@@ -43,14 +44,24 @@ const ContactPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", subject: "General Inquiry", message: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await submitContact({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+      });
       setIsSubmitted(true);
-    }, 2000);
+    } catch (err) {
+      console.error('Failed to submit contact form:', err);
+      alert('Something went wrong. Please try again or reach us directly.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle browser back button for success state

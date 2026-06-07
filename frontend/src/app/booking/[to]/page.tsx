@@ -37,6 +37,7 @@ import { DESTINATIONS } from "@/lib/destinations";
 import DestinationsSection from "@/components/tours/DestinationsSection";
 import { cn } from "@/lib/utils";
 import { getFormattedVehicleTermsList, getVehicleTerms } from "@/lib/rates";
+import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
 
 const LOCAL_SUGGESTIONS = [
   { display_name: "Amadalavalasa, Srikakulam, Andhra Pradesh, India", lat: "18.4124", lon: "83.9038", address: { postcode: "532185", village: "Amadalavalasa" } },
@@ -209,6 +210,14 @@ const BookingPageContent = () => {
   const [expandedVehicle, setExpandedVehicle] = useState<string | null>(null);
   const [pickupDate, setPickupDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
+
+  // Passenger state hooks
+  const [passengerName, setPassengerName] = useState("");
+  const [passengerAge, setPassengerAge] = useState("");
+  const [passengerGender, setPassengerGender] = useState("Male");
+  const [passengerPhone, setPassengerPhone] = useState("");
+  const [passengerEmail, setPassengerEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // India Location Search States
   const [fromSearch, setFromSearch] = useState("Visakhapatnam, Andhra Pradesh, India");
@@ -789,12 +798,94 @@ const BookingPageContent = () => {
 
   const maxPassengers = selectedVehicle ? parseInt(selectedVehicle.pax, 10) || 1 : 1;
 
-  const initiatePayment = () => {
+  const initiatePayment = async () => {
+    if (!passengerName.trim() || !passengerPhone.trim() || !passengerEmail.trim()) {
+      setErrorMessage("Please fill out lead guest name, phone, and email details before paying.");
+      return;
+    }
+    if (!termsAccepted) {
+      setErrorMessage("Please accept the Terms & Conditions of booking.");
+      return;
+    }
+
     setIsProcessing(true);
-    setTimeout(() => {
+    setErrorMessage("");
+    try {
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please verify your connection.");
+      }
+
+      const amountToPay = paymentOption === "part" ? partPayAmount : totalAmount;
+
+      const bookingRes = await createBooking({
+        customer_name: passengerName,
+        customer_email: passengerEmail,
+        customer_phone: passengerPhone,
+        booking_type: "vehicle",
+        total_amount: amountToPay, // Keep for backward compat
+        actual_total_amount: totalAmount,
+        amount_paid: amountToPay,
+        payment_percentage: paymentOption === "part" ? 30 : 100,
+        special_requests: `From: ${fromSearch}. To: ${toSearch}. Type: ${tripType}. Vehicle: ${selectedVehicle?.model}. Mode: Outstation. Pickup: ${pickupDate}. Return: ${returnDate || 'N/A'}. Passengers: ${passengerCount}. Age: ${passengerAge}. Gender: ${passengerGender}. Option: ${paymentOption === "part" ? "Part (30%)" : "Full"}`,
+        fleet_id: selectedVehicle?.model || "Standard Vehicle",
+        travel_date: pickupDate ? pickupDate.split("T")[0] : new Date().toISOString().split("T")[0]
+      });
+
+      console.log("DEBUG bookingRes:", bookingRes);
+      if (!bookingRes.success || !bookingRes.data?.id) {
+        throw new Error("Failed to register booking in database. bookingRes: " + JSON.stringify(bookingRes));
+      }
+
+      const bookingId = bookingRes.data.id;
+      const orderRes = await createPaymentOrder(bookingId);
+      if (!orderRes.success || !orderRes.data?.id) {
+        throw new Error("Failed to create Razorpay transaction order.");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        amount: orderRes.data.amount,
+        currency: orderRes.data.currency,
+        name: "NRK Travels",
+        description: `Vehicle Rental: ${selectedVehicle?.model}`,
+        order_id: orderRes.data.id,
+        handler: async function (response: any) {
+          try {
+            setIsProcessing(true);
+            await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setBookingSuccess(true);
+          } catch (err: any) {
+            setErrorMessage(err.message || "Payment verification failed.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: passengerName,
+          email: passengerEmail,
+          contact: passengerPhone,
+        },
+        theme: {
+          color: "#059669"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setErrorMessage("Payment transaction failed: " + response.error.description);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error("Booking secure payment flow error:", err);
+      setErrorMessage(err.message || "An error occurred during booking creation.");
+    } finally {
       setIsProcessing(false);
-      setBookingSuccess(true);
-    }, 3000);
+    }
   };
 
   // ---------------------------------------------------------
@@ -1618,15 +1709,31 @@ const BookingPageContent = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-3">
               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
-              <input type="text" className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500" placeholder="Enter name" />
+              <input
+                type="text"
+                value={passengerName}
+                onChange={(e) => setPassengerName(e.target.value)}
+                className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500"
+                placeholder="Enter name"
+              />
             </div>
             <div className="space-y-3">
               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Age</label>
-              <input type="number" className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500" placeholder="Age" />
+              <input
+                type="number"
+                value={passengerAge}
+                onChange={(e) => setPassengerAge(e.target.value)}
+                className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-500"
+                placeholder="Age"
+              />
             </div>
             <div className="space-y-3">
               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Gender</label>
-              <select className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900">
+              <select
+                value={passengerGender}
+                onChange={(e) => setPassengerGender(e.target.value)}
+                className="w-full h-14 bg-white border border-slate-100 rounded-xl px-4 text-sm font-bold text-slate-900"
+              >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
@@ -1650,18 +1757,36 @@ const BookingPageContent = () => {
           <div className="grid md:grid-cols-2 gap-6 lg:gap-10">
             <div className="space-y-3 md:col-span-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
-              <input type="text" className="w-full h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="Enter your full name" />
+              <input
+                type="text"
+                value={passengerName}
+                onChange={(e) => setPassengerName(e.target.value)}
+                className="w-full h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                placeholder="Enter your full name"
+              />
             </div>
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Phone Number</label>
               <div className="flex gap-3 lg:gap-4">
                 <div className="w-20 lg:w-24 h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl flex items-center justify-center text-[10px] lg:text-[11px] font-black uppercase tracking-widest text-slate-600">IN +91</div>
-                <input type="tel" className="flex-1 w-full min-w-0 h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="Enter 10 digit number" />
+                <input
+                  type="tel"
+                  value={passengerPhone}
+                  onChange={(e) => setPassengerPhone(e.target.value)}
+                  className="flex-1 w-full min-w-0 h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  placeholder="Enter 10 digit number"
+                />
               </div>
             </div>
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email Address</label>
-              <input type="email" className="w-full h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="example@gmail.com" />
+              <input
+                type="email"
+                value={passengerEmail}
+                onChange={(e) => setPassengerEmail(e.target.value)}
+                className="w-full h-14 lg:h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl px-4 lg:px-6 text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                placeholder="example@gmail.com"
+              />
             </div>
           </div>
         </div>
@@ -1760,6 +1885,13 @@ const BookingPageContent = () => {
               {paymentOption === "full" && <motion.div layoutId="pay-bg" className="absolute inset-0 bg-emerald-50/50 -z-0" />}
             </button>
           </div>
+
+          {errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
+              <span className="text-red-500 mt-0.5">⚠️</span>
+              <p className="text-xs font-bold text-red-600">{errorMessage}</p>
+            </div>
+          )}
 
           <button
             onClick={initiatePayment}

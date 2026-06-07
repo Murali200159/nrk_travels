@@ -26,11 +26,13 @@ import {
   User,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getFormattedVehicleTermsList, getVehicleTerms } from "@/lib/rates";
+import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
 
 interface BookingFlowModalProps {
   isOpen: boolean;
@@ -198,6 +200,7 @@ const BookingFlowModal = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Lead passenger details state hooks
   const [passengerName, setPassengerName] = useState("");
@@ -686,12 +689,82 @@ const BookingFlowModal = ({
     if (step > 1) setStep(step - 1);
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
+    setErrorMessage("");
+    try {
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please verify your internet connection.");
+      }
+
+      const bookingRes = await createBooking({
+        customer_name: passengerName,
+        customer_email: passengerEmail,
+        customer_phone: passengerPhone,
+        booking_type: "vehicle",
+        total_amount: currentFare.price,
+        actual_total_amount: currentFare.price,
+        amount_paid: currentFare.price,
+        payment_percentage: 100,
+        special_requests: `From: ${fromLocation}. To: ${toLocation || "Local"}. Mode: ${bookingMode}. Scope: ${dayTripScope}. Package: ${localPackage}. Return Date: ${returnDate}`,
+        fleet_id: vehicle.model,
+        travel_date: pickupDate ? pickupDate.split("T")[0] : new Date().toISOString().split("T")[0]
+      });
+
+      if (!bookingRes.success || !bookingRes.data?.id) {
+        throw new Error("Failed to create a booking request in our system.");
+      }
+
+      const bookingId = bookingRes.data.id;
+      const orderRes = await createPaymentOrder(bookingId);
+      if (!orderRes.success || !orderRes.data?.id) {
+        throw new Error("Failed to generate payment order. Please try again.");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        amount: orderRes.data.amount,
+        currency: orderRes.data.currency,
+        name: "NRK Travels",
+        description: `Vehicle Booking: ${vehicle.model}`,
+        order_id: orderRes.data.id,
+        handler: async function (response: any) {
+          try {
+            setIsProcessing(true);
+            await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setPaymentSuccess(true);
+          } catch (err: any) {
+            setErrorMessage(err.message || "Payment verification failed.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: passengerName,
+          email: passengerEmail,
+          contact: passengerPhone,
+        },
+        theme: {
+          color: "#059669"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setErrorMessage("Payment failed: " + response.error.description);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error("Booking error:", err);
+      setErrorMessage(err.message || "An unexpected error occurred during booking.");
+    } finally {
       setIsProcessing(false);
-      setPaymentSuccess(true);
-    }, 2500);
+    }
   };
 
   if (!isOpen) return null;
@@ -1236,6 +1309,13 @@ const BookingFlowModal = ({
                     <h3 className="text-3xl font-black tracking-tight text-slate-900">Secure Payment</h3>
                     <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Select your preferred method</p>
                   </div>
+
+                  {errorMessage && (
+                    <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-3 text-rose-800 text-xs font-bold">
+                      <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 animate-pulse" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
 
                   {paymentSuccess ? (
                     <motion.div

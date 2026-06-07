@@ -30,6 +30,7 @@ import {
 import { TOURS_DATA, VehicleRate } from "@/lib/tours";
 import { cn } from "@/lib/utils";
 import { getFormattedVehicleTermsList, getVehicleTerms } from "@/lib/rates";
+import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
 
 type BookingStep = "select" | "summary" | "checkout";
 
@@ -67,6 +68,9 @@ const TourDetailsPage = () => {
   const [paymentOption, setPaymentOption] = useState<"part" | "full">("part");
   const [hasGst, setHasGst] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const parsePrice = (priceStr: string) => {
     return parseInt(priceStr.replace(/,/g, ""), 10) || 0;
@@ -95,31 +99,83 @@ const TourDetailsPage = () => {
     );
   }
 
-  const handleFinalBooking = () => {
-    const bhatta = getDriverBhatta();
-    const baseFare = getBookingPrice() - bhatta;
-    const message = `*NRK TRAVELS - NEW BOOKING REQUEST*
---------------------------------
-*Package:* ${tour.title}
-*Vehicle:* ${selectedVehicle?.model} (${selectedVehicle?.pax} capacity)
-*Passengers:* ${passengerCount} persons
-*Trip Mode:* ${tripMode === 'one-way' ? 'One Way' : 'Round Trip'}
-*Package Fare:* ₹${baseFare.toLocaleString('en-IN')}
-*Driver Bhatta:* ₹${bhatta.toLocaleString('en-IN')} (${tour.days || 1} Days)
-*Total Fare:* ₹${getBookingPrice().toLocaleString('en-IN')}
-*Payment Plan:* ${paymentOption === 'part' ? 'Part Pay (30%)' : 'Full Pay'}
+  const handleFinalBooking = async () => {
+    setIsProcessing(true);
+    setErrorMessage("");
+    try {
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please verify your internet connection.");
+      }
 
-*Customer Details:*
-- Name: ${formData.fullName}
-- Phone: ${formData.phone}
-- Email: ${formData.email}
-${formData.requirements ? `- Special Req: ${formData.requirements}` : ''}
+      const totalAmount = getBookingPrice();
+      const bookingRes = await createBooking({
+        customer_name: formData.fullName,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        booking_type: "tour",
+        total_amount: totalAmount,
+        actual_total_amount: totalAmount,
+        amount_paid: totalAmount,
+        payment_percentage: 100,
+        special_requests: formData.requirements || "",
+        tour_id: tour.title, // using tour title or slug
+        travel_date: new Date().toISOString().split("T")[0]
+      });
 
---------------------------------
-Please confirm availability and share the payment link.`;
+      if (!bookingRes.success || !bookingRes.data?.id) {
+        throw new Error("Failed to create a booking request in our system.");
+      }
 
-    const whatsappUrl = `https://wa.me/919111989222?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+      const bookingId = bookingRes.data.id;
+      const orderRes = await createPaymentOrder(bookingId);
+      if (!orderRes.success || !orderRes.data?.id) {
+        throw new Error("Failed to generate payment order. Please try again.");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        amount: orderRes.data.amount,
+        currency: orderRes.data.currency,
+        name: "NRK Travels",
+        description: `Tour Package: ${tour.title}`,
+        order_id: orderRes.data.id,
+        handler: async function (response: any) {
+          try {
+            setIsProcessing(true);
+            await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setBookingSuccess(true);
+          } catch (err: any) {
+            setErrorMessage(err.message || "Payment verification failed.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: {
+          color: "#059669"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setErrorMessage("Payment failed: " + response.error.description);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error("Booking error:", err);
+      setErrorMessage(err.message || "An unexpected error occurred during booking.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const SummaryList = () => (
@@ -355,6 +411,43 @@ Please confirm availability and share the payment link.`;
                     </div>
                   </div>
                 </motion.div>
+              ) : bookingSuccess ? (
+                <motion.div
+                  key="success-card"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-[2rem] p-8 lg:p-12 border border-slate-100 shadow-xl text-center space-y-6"
+                >
+                  <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mx-auto">
+                    <Check className="w-10 h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Booking Confirmed!</h2>
+                    <p className="text-slate-500 font-bold italic text-sm">
+                      Thank you for booking with NRK Travels. We have received your payment. Our executive will reach out to you shortly.
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-6 space-y-3 text-left">
+                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                      <span>Package</span>
+                      <span className="text-slate-900 font-black">{tour.title}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                      <span>Vehicle</span>
+                      <span className="text-slate-900 font-black">{selectedVehicle?.model}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                      <span>Amount Paid</span>
+                      <span className="text-emerald-600 font-black">₹{(paymentOption === "part" ? Math.round(getBookingPrice() * 0.3) : getBookingPrice()).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center w-full h-14 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                  >
+                    Go Back to Home
+                  </Link>
+                </motion.div>
               ) : (
                 <motion.div
                   key="checkout-form"
@@ -363,6 +456,12 @@ Please confirm availability and share the payment link.`;
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-6"
                 >
+                  {errorMessage && (
+                    <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-3 text-rose-800 text-xs font-bold">
+                      <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
                   {/* Top Bar */}
                   <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>

@@ -16,6 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 import { GROUP_TOURS_DATA, GroupTour } from "@/lib/tours";
 import { getFormattedVehicleTermsList } from "@/lib/rates";
+import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
+
 const GroupTourDetailsPage = () => {
   const params = useParams();
   const slug = params.slug as string;
@@ -26,6 +28,12 @@ const GroupTourDetailsPage = () => {
   const [bookingStep, setBookingStep] = useState<"details" | "seats" | "checkout">("details");
   const [selectedSeats, setSelectedSeats] = useState<Record<number, string>>({});
   const [gender, setGender] = useState<string>("male");
+  const [passengerDetails, setPassengerDetails] = useState<Record<string, { name: string; age: string; gender: string }>>({});
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const BOOKED_SEATS = [4, 7, 10];
   const RESERVED_SEATS = [12, 15];
@@ -265,6 +273,85 @@ const GroupTourDetailsPage = () => {
     }
     return Object.keys(selectedSeats).length * farePerSeat;
   }, [bookingType, totalFullVehicleFare, selectedSeats, farePerSeat]);
+
+  const handleGroupBooking = async () => {
+    setIsProcessing(true);
+    setErrorMessage("");
+    try {
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please verify your internet connection.");
+      }
+
+      const passengerNames = Object.values(passengerDetails).map(p => p.name).filter(Boolean).join(", ");
+      const bookingRes = await createBooking({
+        customer_name: passengerNames || "Guest",
+        customer_email: contactEmail,
+        customer_phone: contactPhone,
+        booking_type: "group_tour",
+        total_amount: totalFare,
+        actual_total_amount: totalFare,
+        amount_paid: totalFare,
+        payment_percentage: 100,
+        special_requests: `Seats: ${Object.keys(selectedSeats).join(", ")}. Gender: ${gender}`,
+        group_tour_id: tour.title,
+        travel_date: new Date(tour.journeyDate).toISOString().split("T")[0]
+      });
+
+      if (!bookingRes.success || !bookingRes.data?.id) {
+        throw new Error("Failed to create a booking request in our system.");
+      }
+
+      const bookingId = bookingRes.data.id;
+      const orderRes = await createPaymentOrder(bookingId);
+      if (!orderRes.success || !orderRes.data?.id) {
+        throw new Error("Failed to generate payment order. Please try again.");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        amount: orderRes.data.amount,
+        currency: orderRes.data.currency,
+        name: "NRK Travels",
+        description: `Group Tour: ${tour.title}`,
+        order_id: orderRes.data.id,
+        handler: async function (response: any) {
+          try {
+            setIsProcessing(true);
+            await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setBookingSuccess(true);
+          } catch (err: any) {
+            setErrorMessage(err.message || "Payment verification failed.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: passengerNames || "Guest",
+          email: contactEmail,
+          contact: contactPhone,
+        },
+        theme: {
+          color: "#059669"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setErrorMessage("Payment failed: " + response.error.description);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error("Booking error:", err);
+      setErrorMessage(err.message || "An unexpected error occurred during booking.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   if (!tour) {
     return (
@@ -1048,8 +1135,52 @@ const GroupTourDetailsPage = () => {
                 </div>
               </div>
             </div>
+          ) : bookingSuccess ? (
+            <div className="w-full max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 text-center bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-2xl">
+              <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mx-auto">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Booking Confirmed!</h2>
+                <p className="text-slate-500 font-bold italic text-sm leading-relaxed">
+                  Thank you for choosing NRK Travels. We have received your payment. Your tickets have been reserved.
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-3xl p-8 space-y-4 text-left border border-slate-100">
+                <div className="flex justify-between text-xs font-bold text-slate-500 pb-3 border-b border-slate-100">
+                  <span>Tour Package</span>
+                  <span className="text-slate-900 font-black">{tour.title}</span>
+                </div>
+                {bookingType !== "full-vehicle" && (
+                  <div className="flex justify-between text-xs font-bold text-slate-500 pb-3 border-b border-slate-100">
+                    <span>Reserved Seats</span>
+                    <span className="text-slate-900 font-black">{Object.keys(selectedSeats).sort((a,b) => Number(a)-Number(b)).join(", ")}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-xs font-bold text-slate-500 pb-3 border-b border-slate-100">
+                  <span>Travel Date</span>
+                  <span className="text-slate-900 font-black">{new Date(tour.journeyDate).toDateString()}</span>
+                </div>
+                <div className="flex justify-between text-xs font-bold text-slate-500">
+                  <span>Amount Paid (INR)</span>
+                  <span className="text-emerald-600 font-black">₹{totalFare.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center w-full h-16 rounded-2xl bg-emerald-600 text-white font-black text-[11px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/10"
+              >
+                Return to Home
+              </Link>
+            </div>
           ) : (
             <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {errorMessage && (
+                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 flex items-center gap-4 text-rose-800 text-xs font-bold shadow-sm">
+                  <AlertCircle className="w-6 h-6 text-rose-500 shrink-0 animate-pulse" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
               <button 
                 onClick={() => {
                   if (bookingType === "full-vehicle") {
@@ -1097,6 +1228,11 @@ const GroupTourDetailsPage = () => {
                               <input 
                                 type="text" 
                                 placeholder="Enter name"
+                                value={passengerDetails["primary"]?.name || ""}
+                                onChange={(e) => setPassengerDetails({
+                                  ...passengerDetails,
+                                  primary: { ...passengerDetails["primary"], name: e.target.value, age: passengerDetails["primary"]?.age || "", gender: passengerDetails["primary"]?.gender || "male" }
+                                })}
                                 className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                               />
                             </div>
@@ -1105,12 +1241,24 @@ const GroupTourDetailsPage = () => {
                               <input 
                                 type="number" 
                                 placeholder="Age"
+                                value={passengerDetails["primary"]?.age || ""}
+                                onChange={(e) => setPassengerDetails({
+                                  ...passengerDetails,
+                                  primary: { ...passengerDetails["primary"], age: e.target.value, name: passengerDetails["primary"]?.name || "", gender: passengerDetails["primary"]?.gender || "male" }
+                                })}
                                 className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                               />
                             </div>
                             <div className="space-y-2">
                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gender</label>
-                              <select className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                              <select 
+                                value={passengerDetails["primary"]?.gender || "male"}
+                                onChange={(e) => setPassengerDetails({
+                                  ...passengerDetails,
+                                  primary: { ...passengerDetails["primary"], gender: e.target.value, name: passengerDetails["primary"]?.name || "", age: passengerDetails["primary"]?.age || "" }
+                                })}
+                                className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                              >
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                               </select>
@@ -1130,6 +1278,11 @@ const GroupTourDetailsPage = () => {
                                 <input 
                                   type="text" 
                                   placeholder="Enter name"
+                                  value={passengerDetails[seatId]?.name || ""}
+                                  onChange={(e) => setPassengerDetails({ 
+                                    ...passengerDetails, 
+                                    [seatId]: { name: e.target.value, age: passengerDetails[seatId]?.age || "", gender: passengerDetails[seatId]?.gender || selectedSeats[Number(seatId)] } 
+                                  })}
                                   className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                                 />
                               </div>
@@ -1138,14 +1291,26 @@ const GroupTourDetailsPage = () => {
                                 <input 
                                   type="number" 
                                   placeholder="Age"
+                                  value={passengerDetails[seatId]?.age || ""}
+                                  onChange={(e) => setPassengerDetails({ 
+                                    ...passengerDetails, 
+                                    [seatId]: { name: passengerDetails[seatId]?.name || "", age: e.target.value, gender: passengerDetails[seatId]?.gender || selectedSeats[Number(seatId)] } 
+                                  })}
                                   className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                                 />
                               </div>
                               <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gender</label>
-                                <select className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-                                  <option value={selectedSeats[Number(seatId)]}>{selectedSeats[Number(seatId)] === 'female' ? 'Female' : 'Male'}</option>
-                                  <option value={selectedSeats[Number(seatId)] === 'female' ? 'male' : 'female'}>{selectedSeats[Number(seatId)] === 'female' ? 'Male' : 'Female'}</option>
+                                <select 
+                                  value={passengerDetails[seatId]?.gender || selectedSeats[Number(seatId)]}
+                                  onChange={(e) => setPassengerDetails({ 
+                                    ...passengerDetails, 
+                                    [seatId]: { name: passengerDetails[seatId]?.name || "", age: passengerDetails[seatId]?.age || "", gender: e.target.value } 
+                                  })}
+                                  className="w-full h-12 rounded-xl bg-slate-50 border border-slate-100 px-4 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                >
+                                  <option value="male">Male</option>
+                                  <option value="female">Female</option>
                                 </select>
                               </div>
                             </div>
@@ -1172,6 +1337,8 @@ const GroupTourDetailsPage = () => {
                         <input 
                           type="tel" 
                           placeholder="+91"
+                          value={contactPhone}
+                          onChange={(e) => setContactPhone(e.target.value)}
                           className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                         />
                       </div>
@@ -1180,6 +1347,8 @@ const GroupTourDetailsPage = () => {
                         <input 
                           type="email" 
                           placeholder="example@gmail.com"
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
                           className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                         />
                       </div>
@@ -1266,9 +1435,16 @@ const GroupTourDetailsPage = () => {
                     </div>
 
                     <button 
-                      className="w-full h-16 rounded-2xl bg-emerald-500 text-slate-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3"
+                      onClick={handleGroupBooking}
+                      disabled={isProcessing || !contactPhone || !contactEmail}
+                      className={cn(
+                        "w-full h-16 rounded-2xl text-slate-900 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-center gap-3",
+                        (isProcessing || !contactPhone || !contactEmail)
+                          ? "bg-emerald-500/30 text-slate-900/40 cursor-not-allowed"
+                          : "bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/20"
+                      )}
                     >
-                      Proceed to Payment <ChevronRight className="w-4 h-4" />
+                      {isProcessing ? "Processing..." : "Proceed to Payment"} <ChevronRight className="w-4 h-4" />
                     </button>
                     
                     <p className="text-[9px] text-center font-bold text-white/30 uppercase tracking-widest leading-relaxed">

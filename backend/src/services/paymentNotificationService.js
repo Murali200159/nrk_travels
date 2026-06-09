@@ -2,16 +2,66 @@ const sendEmail = require('./notifications/sendEmail');
 const sendSMS = require('./notifications/sendSMS');
 const sendWhatsApp = require('../utils/sendWhatsApp');
 const config = require('../config/env');
+const Vehicle = require('../models/Vehicle.model');
+const VehicleTerm = require('../models/VehicleTerm.model');
 
 /**
  * Get Trip Name dynamically based on booking type
  */
 const getTripName = (booking) => {
-  if (booking.booking_type === 'tour') return booking.tour_id || 'NRK Premium Tour';
-  if (booking.booking_type === 'group_tour') return booking.tour_id || 'NRK Group Tour';
+  if (booking.booking_type === 'tour') return booking.tour_id || 'Vizag Taxi Premium Tour';
+  if (booking.booking_type === 'group_tour') return booking.tour_id || 'Vizag Taxi Group Tour';
   if (booking.booking_type === 'vehicle') return `Vehicle Rental: ${booking.vehicle_id || 'Standard Vehicle'}`;
   if (booking.booking_type === 'hire_driver') return 'Hire a Driver Service';
-  return 'NRK Travels Trip';
+  return 'Vizag Taxi Trip';
+};
+
+/**
+ * Helper to fetch vehicle terms dynamically from the database
+ */
+const fetchVehicleTerms = async (booking) => {
+  let terms = [
+    'Extra kilometers after the package limit will be charged at ₹20/km.',
+    'Extra hours after the package time limit will be charged at ₹400/hour.',
+    'Driver allowance (Bhatta) is ₹200/day.',
+    'Toll gate charges and parking charges must be paid by the customer.',
+    'Driver food and accommodation should be arranged/provided by the customer during outstation trips.',
+    'Any additional charges not included in the package must be borne by the customer.',
+    'Customer should carry valid ID proof during the journey.',
+    'Booking cancellation and refund policy will be applicable as per Vizag Taxi terms.'
+  ];
+
+  try {
+    if (booking.booking_type === 'vehicle' && booking.vehicle_id) {
+      // 1. Fetch vehicle details
+      const vehicle = await Vehicle.findOne({ $or: [{ name: booking.vehicle_id }, { type: booking.vehicle_id }] });
+
+      if (vehicle) {
+        // 2. Fetch specific vehicle terms
+        const specificTerms = await VehicleTerm.findOne({ vehicle_type: { $regex: vehicle.name, $options: 'i' } });
+
+        if (specificTerms && specificTerms.terms && specificTerms.terms.length > 0) {
+          terms = specificTerms.terms;
+        } else {
+          // 3. Fallback to general vehicle type terms
+          const generalTerms = await VehicleTerm.findOne({ vehicle_type: { $regex: vehicle.type, $options: 'i' } });
+
+          if (generalTerms && generalTerms.terms && generalTerms.terms.length > 0) {
+            terms = generalTerms.terms;
+          }
+        }
+      }
+    } else if (booking.booking_type === 'hire_driver') {
+      const driverTerms = await VehicleTerm.findOne({ vehicle_type: 'Honda Amaze' }); // Standard policy for driver hire
+      if (driverTerms && driverTerms.terms) {
+        terms = driverTerms.terms;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching vehicle terms from database:', error);
+  }
+
+  return terms;
 };
 
 /**
@@ -67,7 +117,7 @@ const notifyPostPayment = async (booking) => {
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #334155;">
           <div style="text-align: center; border-bottom: 2px solid #059669; padding-bottom: 20px; margin-bottom: 20px;">
-            <h1 style="color: #059669; margin: 0; font-size: 24px;">NRK Travels</h1>
+            <h1 style="color: #059669; margin: 0; font-size: 24px;">Vizag Taxi</h1>
             <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">Booking Confirmation</p>
           </div>
           
@@ -100,10 +150,10 @@ const notifyPostPayment = async (booking) => {
           </div>
 
           <div style="text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-            <p style="font-weight: bold; color: #0f172a; margin: 0 0 15px;">Thank you for choosing NRK Travels.</p>
+            <p style="font-weight: bold; color: #0f172a; margin: 0 0 15px;">Thank you for choosing Vizag Taxi.</p>
             <p style="margin: 0 0 5px; font-size: 14px; color: #64748b;">For support:</p>
-            <p style="margin: 0 0 5px; font-weight: bold;">📞 +91 7799009855</p>
-            <p style="margin: 0 0 15px;"><a href="mailto:support@nrktravels.com" style="color: #059669; text-decoration: none;">📧 support@nrktravels.com</a></p>
+            <p style="margin: 0 0 5px; font-weight: bold;">📞 +91 91119 89222</p>
+            <p style="margin: 0 0 15px;"><a href="mailto:info@nrtravels.com" style="color: #059669; text-decoration: none;">📧 info@nrtravels.com</a></p>
             <p style="margin: 0; font-style: italic; color: #059669; font-weight: bold;">Have a safe and pleasant journey.</p>
           </div>
         </div>

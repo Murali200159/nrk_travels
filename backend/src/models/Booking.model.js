@@ -35,7 +35,7 @@ const bookingSchema = new mongoose.Schema({
 });
 
 // Indexes for performance equivalent to Supabase
-bookingSchema.index({ booking_id: 1 });
+
 bookingSchema.index({ order_id: 1 });
 bookingSchema.index({ payment_status: 1 });
 bookingSchema.index({ booking_status: 1 });

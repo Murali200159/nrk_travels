@@ -117,7 +117,14 @@ Thank you.`.trim();
 
     // 3. Dispatch WhatsApp to Admin
     const adminPhone = config.twilio.adminPhone || '9111989222';
-    await sendWhatsApp(adminPhone, adminMessage);
+    const waSuccess = await sendWhatsApp(adminPhone, adminMessage);
+    
+    // Fallback: If WhatsApp fails (e.g., expired token), send an SMS to the Admin
+    if (!waSuccess) {
+      console.log("[Enquiry Service] WhatsApp failed, attempting to send SMS fallback to Admin...");
+      const sendSMS = require('./notifications/sendSMS');
+      await sendSMS(adminPhone, `New Cab Enquiry\nName: ${mappedData.name}\nMobile: ${mappedData.mobile}\nFrom: ${mappedData.pickup}\nTo: ${mappedData.drop || 'N/A'}`);
+    }
 
     // 4. Dispatch WhatsApp to Customer
     await sendWhatsApp(mappedData.mobile, customerMessage);

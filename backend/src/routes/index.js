@@ -8,6 +8,7 @@ const paymentRoute = require('./payment.route');
 const contactRoute = require('./contact.route');
 const careerRoute = require('./career.route');
 const dashboardRoute = require('./dashboard.route');
+const enquiryRoute = require('./enquiry.route');
 
 const router = express.Router();
 
@@ -47,6 +48,10 @@ const routes = [
   {
     path: '/dashboard',
     route: dashboardRoute,
+  },
+  {
+    path: '/enquiries',
+    route: enquiryRoute,
   },
 ];
 

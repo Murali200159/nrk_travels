@@ -33,7 +33,7 @@ import { TOURS_DATA } from "@/lib/tours";
 import SectionReveal from "@/components/ui/SectionReveal";
 import { cn } from "@/lib/utils";
 import BookingFlowModal from "@/components/booking/BookingFlowModal";
-import { getVehicleTerms, getFormattedVehicleTermsList } from "@/lib/rates";
+import { getVehicleTerms, getFormattedVehicleTermsList, getOneWayRate } from "@/lib/rates";
 
 interface Suggestion {
   display_name: string;
@@ -609,9 +609,34 @@ const FleetDetailsPage = () => {
 
     // Book for KM Mode - Pure distance-based billing + driver bhatta per day, no daily minimum 300 KM billing per day
     const distance = osrmDistance !== null ? osrmDistance : getEstimatedDistance(pickupLocation, dropLocation);
-    const multiplier = tripType === "round-trip" ? 2 : 1;
-    const basePrice = distance * multiplier * Number(vehicle.pricePerKm);
-    const bhatta = terms.driverBhatta * calculatedDays; 
+    
+    if (tripType === "one-way") {
+      const oneWayRate = getOneWayRate(vehicle.slug, vehicle.model);
+      const basePrice = distance * oneWayRate;
+      const total = 1000 + basePrice;
+      const timeStr = osrmDuration !== null ? osrmDuration : (() => {
+        const hours = Math.floor((distance * 1.5) / 60) + 1;
+        const minutes = Math.round((distance * 1.5) % 60);
+        return `${hours}h ${minutes}m`;
+      })();
+
+      return {
+        price: total,
+        distance: distance,
+        time: timeStr,
+        breakdown: { 
+          base: basePrice, 
+          bhatta: 0, 
+          info: `One Way rate (₹${oneWayRate}/KM) + ₹1,000 Premium Charge.`
+        }
+      };
+    }
+
+    const multiplier = 2;
+    const totalKm = distance * multiplier;
+    const chargeKm = totalKm <= 250 ? 250 : totalKm;
+    const basePrice = Math.ceil(chargeKm * Number(vehicle.pricePerKm));
+    const bhatta = 300 * calculatedDays; 
     const total = basePrice + bhatta;
     const timeStr = osrmDuration !== null ? osrmDuration : (() => {
       const hours = Math.floor((distance * 1.5) / 60) + 1;
@@ -621,7 +646,7 @@ const FleetDetailsPage = () => {
 
     return {
       price: total,
-      distance: distance * multiplier,
+      distance: chargeKm,
       time: timeStr,
       breakdown: { 
         base: basePrice, 
@@ -1328,6 +1353,7 @@ const FleetDetailsPage = () => {
         prefilledDays={calculatedDays}
         prefilledPickupDate={pickupDate}
         prefilledReturnDate={returnDate}
+        prefilledTripType={tripType}
       />
     </main>
   );

@@ -64,19 +64,30 @@ export const calculateTourPrice = (tourSlug: string, vehicleSlug: string): numbe
       case "swift-dzire":
       case "toyota-glanza":
       case "honda-amaze":
+      case "toyota-sedan":
         basePrice = 3000;
         break;
       case "ertiga":
         basePrice = 4000;
         break;
       case "innova-crysta":
+      case "innova-hycross":
         basePrice = 5500;
+        break;
+      case "12-seater-tempo":
+        basePrice = 8000;
         break;
       case "tempo-traveller":
         basePrice = 9000;
         break;
       case "urbania":
         basePrice = 11000;
+        break;
+      case "28-seater-bus":
+        basePrice = 16000;
+        break;
+      case "36-seater-bus":
+        basePrice = 18000;
         break;
       case "luxury-bus":
         basePrice = 22000;
@@ -121,12 +132,17 @@ const getVehicleRatesForTour = (tourSlug: string): VehicleRate[] => {
     { model: "Swift Dzire", pax: "4", price: calculateTourPrice(tourSlug, "swift-dzire").toLocaleString('en-IN'), image: "/images/fleet/swift_dzire.png" },
     { model: "Ertiga", pax: "6", price: calculateTourPrice(tourSlug, "ertiga").toLocaleString('en-IN'), image: "/images/fleet/ertiga.png" },
     { model: "Toyota Glanza", pax: "4", price: calculateTourPrice(tourSlug, "toyota-glanza").toLocaleString('en-IN'), image: "/images/fleet/glanza.png" },
+    { model: "Toyota Sedan", pax: "4", price: calculateTourPrice(tourSlug, "toyota-sedan").toLocaleString('en-IN'), image: "/images/fleet/glanza.png" },
     { model: "Innova Crysta", pax: "7", price: calculateTourPrice(tourSlug, "innova-crysta").toLocaleString('en-IN'), image: "/images/fleet/innova_crysta.png" },
-    { model: "Tempo Traveller", pax: "17", price: calculateTourPrice(tourSlug, "tempo-traveller").toLocaleString('en-IN'), image: "/images/fleet/tempo_traveller.png" },
+    { model: "Innova Hycross", pax: "7", price: calculateTourPrice(tourSlug, "innova-hycross").toLocaleString('en-IN'), image: "/images/fleet/innova_crysta.png" },
+    { model: "12 Seater Tempo Traveller", pax: "12", price: calculateTourPrice(tourSlug, "12-seater-tempo").toLocaleString('en-IN'), image: "/images/fleet/tempo_traveller.png" },
+    { model: "17 Seater Tempo Traveller", pax: "17", price: calculateTourPrice(tourSlug, "tempo-traveller").toLocaleString('en-IN'), image: "/images/fleet/tempo_traveller.png" },
     { model: "Honda Amaze", pax: "4", price: calculateTourPrice(tourSlug, "honda-amaze").toLocaleString('en-IN'), image: "/images/fleet/honda_amaze.png" },
     { model: "Urbania", pax: "16", price: calculateTourPrice(tourSlug, "urbania").toLocaleString('en-IN'), image: "/images/fleet/urbania.png" },
-    { model: "Luxury Bus", pax: "40", price: calculateTourPrice(tourSlug, "luxury-bus").toLocaleString('en-IN'), image: "/images/fleet/bus.png" },
-    { model: "Luxury Mini Bus", pax: "21", price: calculateTourPrice(tourSlug, "mini-bus").toLocaleString('en-IN'), image: "/images/fleet/minibus.png" }
+    { model: "28 Seater Mini Bus", pax: "28", price: calculateTourPrice(tourSlug, "28-seater-bus").toLocaleString('en-IN'), image: "/images/fleet/bus.png" },
+    { model: "36 Seater Bus", pax: "36", price: calculateTourPrice(tourSlug, "36-seater-bus").toLocaleString('en-IN'), image: "/images/fleet/bus.png" },
+    { model: "40 Seater Bus", pax: "40", price: calculateTourPrice(tourSlug, "luxury-bus").toLocaleString('en-IN'), image: "/images/fleet/bus.png" },
+    { model: "22 Seater Mini Bus", pax: "22", price: calculateTourPrice(tourSlug, "mini-bus").toLocaleString('en-IN'), image: "/images/fleet/minibus.png" }
   ];
 };
 

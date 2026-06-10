@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getFormattedVehicleTermsList, getVehicleTerms } from "@/lib/rates";
+import { getFormattedVehicleTermsList, getVehicleTerms, getOneWayRate } from "@/lib/rates";
 import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
 
 interface BookingFlowModalProps {
@@ -53,6 +53,7 @@ interface BookingFlowModalProps {
   prefilledDays?: number;
   prefilledPickupDate?: string;
   prefilledReturnDate?: string;
+  prefilledTripType?: "one-way" | "round-trip";
 }
 
 interface Suggestion {
@@ -176,7 +177,8 @@ const BookingFlowModal = ({
   prefilledLocalPackage = "8 Hours / 80 KM",
   prefilledDays = 1,
   prefilledPickupDate = "",
-  prefilledReturnDate = ""
+  prefilledReturnDate = "",
+  prefilledTripType = "one-way"
 }: BookingFlowModalProps) => {
   const [step, setStep] = useState(1);
   const [fromLocation, setFromLocation] = useState(prefilledFromLocation);
@@ -184,6 +186,7 @@ const BookingFlowModal = ({
   const [bookingMode, setBookingMode] = useState<"km" | "day">(prefilledBookingMode);
   const [dayTripScope, setDayTripScope] = useState<"local" | "outstation">(prefilledDayTripScope);
   const [localPackage, setLocalPackage] = useState(prefilledLocalPackage);
+  const [tripType, setTripType] = useState<"one-way" | "round-trip">(prefilledTripType);
   const [returnDate, setReturnDate] = useState("");
   const [pickupDate, setPickupDate] = useState("");
 
@@ -429,6 +432,7 @@ const BookingFlowModal = ({
       setBookingMode(prefilledBookingMode);
       setDayTripScope(prefilledDayTripScope);
       setLocalPackage(prefilledLocalPackage);
+      setTripType(prefilledTripType);
       setPaymentSuccess(false);
       setIsProcessing(false);
       setTermsAccepted(false);
@@ -457,7 +461,8 @@ const BookingFlowModal = ({
     prefilledLocalPackage,
     prefilledDays,
     prefilledPickupDate,
-    prefilledReturnDate
+    prefilledReturnDate,
+    prefilledTripType
   ]);
 
   // Click outside to close suggestions
@@ -656,10 +661,36 @@ const BookingFlowModal = ({
       };
     }
 
-    // KM Booking Mode - Pure distance * rate per km calculation + driver bhatta per day, no daily minimum billing added to base
+    // KM Booking Mode - One Way vs Round Trip Outstation
     const distance = osrmDistance !== null ? osrmDistance : getEstimatedDistance(fromLocation, toLocation);
-    const basePrice = distance * vehicle.pricePerKm;
-    const bhatta = terms.driverBhatta * calculatedDays;
+    
+    if (tripType === "one-way") {
+      const oneWayRate = getOneWayRate(vehicle.slug, vehicle.model);
+      const basePrice = Math.ceil(distance * oneWayRate);
+      const total = 1000 + basePrice;
+      const timeStr = osrmDuration !== null ? osrmDuration : (() => {
+        const hours = Math.floor((distance * 1.5) / 60) + 1;
+        const minutes = Math.round((distance * 1.5) % 60);
+        return `${hours}h ${minutes}m`;
+      })();
+
+      return {
+        price: total,
+        distance: distance,
+        time: timeStr,
+        breakdown: {
+          base: basePrice,
+          bhatta: 0,
+          extraInfo: `One-Way (₹${oneWayRate}/KM + ₹1,000 Premium Charge)`
+        }
+      };
+    }
+
+    const multiplier = 2;
+    const totalKm = distance * multiplier;
+    const chargeKm = totalKm <= 250 ? 250 : totalKm;
+    const basePrice = Math.ceil(chargeKm * vehicle.pricePerKm);
+    const bhatta = 300 * calculatedDays;
     const total = basePrice + bhatta;
     const timeStr = osrmDuration !== null ? osrmDuration : (() => {
       const hours = Math.floor((distance * 1.5) / 60) + 1;
@@ -669,12 +700,12 @@ const BookingFlowModal = ({
 
     return {
       price: total,
-      distance: distance,
+      distance: chargeKm,
       time: timeStr,
       breakdown: {
         base: basePrice,
         bhatta: bhatta,
-        extraInfo: `KM-based Outstation (${calculatedDays} Days)`
+        extraInfo: `Round-Trip Outstation (${calculatedDays} Days, ₹${vehicle.pricePerKm}/KM)`
       }
     };
   };
@@ -707,7 +738,7 @@ const BookingFlowModal = ({
         actual_total_amount: currentFare.price,
         amount_paid: currentFare.price,
         payment_percentage: 100,
-        special_requests: `From: ${fromLocation}. To: ${toLocation || "Local"}. Mode: ${bookingMode}. Scope: ${dayTripScope}. Package: ${localPackage}. Return Date: ${returnDate}`,
+        special_requests: `From: ${fromLocation}. To: ${toLocation || "Local"}. Mode: ${bookingMode}. Scope: ${dayTripScope}. Package: ${localPackage}. Trip Type: ${tripType}. Return Date: ${returnDate}`,
         fleet_id: vehicle.model,
         travel_date: pickupDate ? pickupDate.split("T")[0] : new Date().toISOString().split("T")[0]
       });
@@ -1144,33 +1175,43 @@ const BookingFlowModal = ({
                       )}
 
                       {bookingMode === "km" && (
-                        <div className="grid md:grid-cols-2 gap-6 pt-2">
+                        <div className="space-y-4 pt-2">
                           <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Date & Time</label>
-                            <div className="relative group">
-                              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
-                              <input
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trip Type</label>
+                            <div className="flex bg-slate-50 border border-slate-200 p-1 rounded-xl w-full h-11 items-center">
+                              <button type="button" onClick={() => setTripType("one-way")} className={cn("flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", tripType === "one-way" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400")}>One Way</button>
+                              <button type="button" onClick={() => setTripType("round-trip")} className={cn("flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", tripType === "round-trip" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400")}>Round Trip</button>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Date & Time</label>
+                              <div className="relative group">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                                <input
                                   type="datetime-local"
                                   value={pickupDate}
                                   onChange={(e) => setPickupDate(e.target.value)}
                                   className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 text-xs font-bold text-slate-900 focus:outline-none"
-                              />
+                                />
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
-                              <span>Return Date & Time</span>
-                              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[8px] font-black tracking-normal uppercase">{calculatedDays} Day{calculatedDays > 1 ? "s" : ""}</span>
-                            </label>
-                            <div className="relative group">
-                              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
-                              <input
-                                type="datetime-local"
-                                value={returnDate}
-                                onChange={(e) => setReturnDate(e.target.value)}
-                                className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 text-xs font-bold text-slate-900 focus:outline-none"
-                              />
+                            <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+                                <span>Return Date & Time</span>
+                                <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[8px] font-black tracking-normal uppercase">{calculatedDays} Day{calculatedDays > 1 ? "s" : ""}</span>
+                              </label>
+                              <div className="relative group">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
+                                <input
+                                  type="datetime-local"
+                                  value={returnDate}
+                                  onChange={(e) => setReturnDate(e.target.value)}
+                                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 text-xs font-bold text-slate-900 focus:outline-none"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1429,7 +1470,7 @@ const BookingFlowModal = ({
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {getFormattedVehicleTermsList(vehicle.slug, vehicle.model).map((term, i) => (
+                          {getFormattedVehicleTermsList(vehicle.slug, vehicle.model, vehicle.pax, tripType).map((term, i) => (
                             <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100/50">
                               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">{term}</span>

@@ -24,6 +24,18 @@ export const FLEET_DATA: Record<string, Vehicle> = {
     minKm: "300",
     isPremium: false
   },
+  "toyota-sedan": {
+    slug: "toyota-sedan",
+    model: "Toyota Sedan",
+    type: "Sedan",
+    description: "A premium Toyota sedan offering superior comfort, a smooth ride, and great boot space. Ideal for executive travel and long family trips.",
+    pax: "4",
+    pricePerKm: "14",
+    features: ["Touchscreen Infotainment", "Air Conditioning", "ABS & Airbags", "Rear Parking Camera", "USB Charger", "Ample Boot Space"],
+    images: ["/images/fleet/glanza.png", "/images/fleet/swift_dzire.png"],
+    minKm: "300",
+    isPremium: false
+  },
   "toyota-glanza": {
     slug: "toyota-glanza",
     model: "Toyota Glanza",
@@ -66,15 +78,39 @@ export const FLEET_DATA: Record<string, Vehicle> = {
     type: "MUV / SUV",
     description: "Toyota Innova Crysta is the gold standard for luxury group travel in India. Known for its unmatched comfort, powerful performance, and premium interiors, it's the ideal choice for long family vacations and corporate travel.",
     pax: "7",
-    pricePerKm: "20",
+    pricePerKm: "22",
     features: ["Captain Seats", "Dual Zone AC", "Premium Sound System", "Spacious Boot Space", "Advanced Safety Features"],
     images: ["/images/fleet/innova_crysta.png", "/images/fleet/ertiga.png"],
     minKm: "300",
     isPremium: true
   },
+  "innova-hycross": {
+    slug: "innova-hycross",
+    model: "Innova Hycross",
+    type: "MUV / SUV",
+    description: "Toyota Innova Hycross represents the next generation of hybrid luxury. Combining a whisper-quiet engine, ultra-modern styling, and exceptional ride comfort, it is perfect for premium family vacations and VIP travel.",
+    pax: "7",
+    pricePerKm: "24",
+    features: ["Ottoman Seats", "Dual Zone AC", "Panoramic Sunroof", "Advanced Hybrid Engine", "Whisper Quiet Cabin"],
+    images: ["/images/fleet/innova_crysta.png", "/images/fleet/ertiga.png"],
+    minKm: "300",
+    isPremium: true
+  },
+  "12-seater-tempo": {
+    slug: "12-seater-tempo",
+    model: "12 Seater Tempo Traveller",
+    type: "Luxury Van",
+    description: "Our 12-seater Tempo Traveller offers the perfect blend of capacity and comfort for small-to-medium groups. Outfitted with premium push-back reclining seats, dynamic climate control, and entertainment options.",
+    pax: "12",
+    pricePerKm: "30",
+    features: ["Push-back Seats", "LED TV / Audio", "Ample Luggage Space", "Professional Driver", "High-Cooling AC"],
+    images: ["/images/fleet/tempo_traveller.png", "/images/fleet/urbania.png"],
+    minKm: "300",
+    isPremium: true
+  },
   "tempo-traveller": {
     slug: "tempo-traveller",
-    model: "Tempo Traveller",
+    model: "17 Seater Tempo Traveller",
     type: "Luxury Van",
     description: "Our 17-seater Tempo Traveller is the ultimate solution for large group tours, weddings, and corporate outings. With push-back seats and a high-roof design, it ensures every passenger travels in comfort.",
     pax: "17",
@@ -96,27 +132,51 @@ export const FLEET_DATA: Record<string, Vehicle> = {
     minKm: "300",
     isPremium: true
   },
-  "luxury-bus": {
-    slug: "luxury-bus",
-    model: "Luxury Bus",
-    type: "Luxury Bus",
-    description: "Our premium 40-seater luxury bus is the perfect choice for large groups, corporate outings, and family events. Featuring air conditioning, reclining seats, on-board entertainment, and ample luggage space, it ensures a comfortable travel experience.",
-    pax: "40",
-    pricePerKm: "60",
+  "mini-bus": {
+    slug: "mini-bus",
+    model: "22 Seater Mini Bus",
+    type: "Mini Bus",
+    description: "Our premium 22-seater luxury mini bus is the perfect choice for medium-sized groups, corporate teams, and comfortable family tours. Equipped with air conditioning, push-back reclining seats, dynamic sound system, and spacious storage, it provides an exquisite balance between capacity and agility.",
+    pax: "22",
+    pricePerKm: "40",
+    features: ["Air Conditioning", "Push-back Seats", "Ample Luggage space", "LED TV / Audio", "Premium Suspension", "Professional Captain"],
+    images: ["/images/fleet/minibus.png"],
+    minKm: "300",
+    isPremium: true
+  },
+  "28-seater-bus": {
+    slug: "28-seater-bus",
+    model: "28 Seater Mini Bus",
+    type: "Mini Bus",
+    description: "Our 28-seater luxury coach is designed for medium-to-large corporate retreats, family sightseeing tours, and school excursions. Offers individual AC vents, reclining comfort seats, and professional tour captains.",
+    pax: "28",
+    pricePerKm: "45",
     features: ["Air Conditioning", "Reclining Seats", "Ample Luggage space", "LED TV / Audio", "Premium Suspension", "Professional Captain"],
     images: ["/images/fleet/bus.png"],
     minKm: "300",
     isPremium: true
   },
-  "mini-bus": {
-    slug: "mini-bus",
-    model: "21-Seater Mini Bus",
-    type: "Mini Bus",
-    description: "Our premium 21-seater luxury mini bus is the perfect choice for medium-sized groups, corporate teams, and comfortable family tours. Equipped with air conditioning, push-back reclining seats, dynamic sound system, and spacious storage, it provides an exquisite balance between capacity and agility.",
-    pax: "21",
-    pricePerKm: "45",
-    features: ["Air Conditioning", "Push-back Seats", "Ample Luggage space", "LED TV / Audio", "Premium Suspension", "Professional Captain"],
-    images: ["/images/fleet/minibus.png"],
+  "36-seater-bus": {
+    slug: "36-seater-bus",
+    model: "36 Seater Bus",
+    type: "Luxury Bus",
+    description: "Our 36-seater luxury bus provides absolute comfort for large travel groups. Outfitted with plush reclining seats, onboard entertainment systems, air suspension for smooth travel, and professional service.",
+    pax: "36",
+    pricePerKm: "55",
+    features: ["Air Conditioning", "Reclining Seats", "Ample Luggage space", "LED TV / Audio", "Premium Suspension", "Professional Captain"],
+    images: ["/images/fleet/bus.png"],
+    minKm: "300",
+    isPremium: true
+  },
+  "luxury-bus": {
+    slug: "luxury-bus",
+    model: "40 Seater Bus",
+    type: "Luxury Bus",
+    description: "Our premium 40-seater luxury bus is the perfect choice for large groups, corporate outings, and family events. Featuring air conditioning, reclining seats, on-board entertainment, and ample luggage space, it ensures a comfortable travel experience.",
+    pax: "40",
+    pricePerKm: "65",
+    features: ["Air Conditioning", "Reclining Seats", "Ample Luggage space", "LED TV / Audio", "Premium Suspension", "Professional Captain"],
+    images: ["/images/fleet/bus.png"],
     minKm: "300",
     isPremium: true
   }

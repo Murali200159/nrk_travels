@@ -36,8 +36,9 @@ import { FLEET_DATA } from "@/lib/fleet";
 import { DESTINATIONS } from "@/lib/destinations";
 import DestinationsSection from "@/components/tours/DestinationsSection";
 import { cn } from "@/lib/utils";
-import { getFormattedVehicleTermsList, getVehicleTerms } from "@/lib/rates";
+import { getFormattedVehicleTermsList, getVehicleTerms, getOneWayRate } from "@/lib/rates";
 import { createBooking, createPaymentOrder, verifyPayment, loadRazorpay } from "@/lib/api";
+import LeadCaptureModal from "@/components/booking/LeadCaptureModal";
 
 const LOCAL_SUGGESTIONS = [
   { display_name: "Amadalavalasa, Srikakulam, Andhra Pradesh, India", lat: "18.4124", lon: "83.9038", address: { postcode: "532185", village: "Amadalavalasa" } },
@@ -197,6 +198,15 @@ const BookingPageContent = () => {
   const [tripType, setTripType] = useState<"one-way" | "round-trip">(() => {
     return isTempoMode ? "round-trip" : "one-way";
   });
+  const [isLeadSubmitted, setIsLeadSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const submitted = sessionStorage.getItem("lead_submitted") === "true";
+      setIsLeadSubmitted(submitted);
+    }
+  }, []);
+
   const [airportTrip, setAirportTrip] = useState<"from-airport" | "to-airport">("from-airport");
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -746,9 +756,24 @@ const BookingPageContent = () => {
   // Simplified and corrected fare calculation based on requirements including Driver Bhatta
   const calculateFare = (pricePerKm: number, slug: string, modelName?: string, pax?: string | number) => {
     const distance = calculatedDistance || destination.distanceKm;
-    const multiplier = (tripType === "round-trip") ? 2 : 1;
+
+    if (tripType === "one-way") {
+      const oneWayRate = getOneWayRate(slug, modelName);
+      const basePrice = Math.ceil(distance * oneWayRate);
+      const total = 1000 + basePrice;
+      return {
+        total: total,
+        totalKm: distance,
+        chargeKm: distance,
+        bhatta: 0,
+        base: basePrice,
+        days: 1
+      };
+    }
+
+    const multiplier = 2;
     const totalKm = distance * multiplier;
-    const chargeKm = distance * multiplier;
+    const chargeKm = totalKm <= 250 ? 250 : totalKm;
 
     // Calculate number of days (default to 1 day for one-way, and based on pickup/return difference for round trip)
     let calculatedDays = 1;
@@ -760,9 +785,8 @@ const BookingPageContent = () => {
       calculatedDays = Math.max(diffDays, 1);
     }
 
-    // Resolve vehicle terms for Bhatta
-    const terms = getVehicleTerms(slug, modelName, pax);
-    const bhatta = terms.driverBhatta * calculatedDays;
+    // Resolve flat ₹300 driver allowance per day for outstation trips
+    const bhatta = 300 * calculatedDays;
 
     const basePrice = Math.ceil(chargeKm * pricePerKm);
     const total = basePrice + bhatta;
@@ -1333,7 +1357,7 @@ const BookingPageContent = () => {
     <div className="space-y-10">
       {renderTripHeader()}
       {renderEditPanel()}
-      <div className="flex flex-col-reverse lg:flex-row gap-12">
+      <div className={cn("flex flex-col-reverse lg:flex-row gap-12 transition-all duration-700", !isLeadSubmitted && "blur-md pointer-events-none select-none")}>
         <div className="lg:w-[65%] space-y-12">
           <div className="space-y-8">
             <div className="space-y-2">
@@ -1396,7 +1420,7 @@ const BookingPageContent = () => {
         </>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-10">
+      <div className={cn("flex flex-col lg:flex-row gap-10 transition-all duration-700", !isLeadSubmitted && "blur-md pointer-events-none select-none")}>
         <div className="lg:w-[65%] space-y-10">
           {/* Mobile Only: Trip Mode */}
           <div className="lg:hidden">
@@ -1464,7 +1488,7 @@ const BookingPageContent = () => {
           {/* Vertical Vehicle List */}
           <div className="space-y-6">
             {Object.values(FLEET_DATA)
-              .filter((vehicle) => !isTempoMode || vehicle.slug === "tempo-traveller" || vehicle.slug === "urbania" || vehicle.slug === "luxury-bus" || vehicle.slug === "mini-bus")
+              .filter((vehicle) => !isTempoMode || vehicle.slug.includes("tempo") || vehicle.slug.includes("urbania") || vehicle.slug.includes("bus"))
               .map((vehicle) => {
                 const fares = calculateFare(Number(vehicle.pricePerKm), vehicle.slug);
                 const isExpanded = expandedVehicle === vehicle.slug;
@@ -1501,7 +1525,7 @@ const BookingPageContent = () => {
                             Up to {vehicle.pax} passengers
                           </p>
                           <p className={cn("text-[9px] font-bold text-slate-400 mt-0.5")}>
-                            {fares.totalKm} KM @ ₹{vehicle.pricePerKm}/KM
+                            {fares.totalKm} KM @ ₹{tripType === "one-way" ? getOneWayRate(vehicle.slug, vehicle.model) : vehicle.pricePerKm}/KM
                           </p>
                         </div>
                         <button
@@ -1808,7 +1832,8 @@ const BookingPageContent = () => {
             {getFormattedVehicleTermsList(
               selectedVehicle?.slug || "",
               selectedVehicle?.model || "",
-              selectedVehicle?.pax || ""
+              selectedVehicle?.pax || "",
+              tripType
             ).map((term, i) => (
               <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100/50">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -1917,7 +1942,7 @@ const BookingPageContent = () => {
       <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Select Vehicle</h3>
       <div className="space-y-4">
         {Object.values(FLEET_DATA)
-          .filter((vehicle) => !isTempoMode || vehicle.slug === "tempo-traveller" || vehicle.slug === "urbania" || vehicle.slug === "luxury-bus" || vehicle.slug === "mini-bus")
+          .filter((vehicle) => !isTempoMode || vehicle.slug.includes("tempo") || vehicle.slug.includes("urbania") || vehicle.slug.includes("bus"))
           .map((vehicle) => {
             const fares = calculateFare(Number(vehicle.pricePerKm), vehicle.slug);
             return (
@@ -1931,7 +1956,7 @@ const BookingPageContent = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[8px] font-black text-slate-400 uppercase">{vehicle.pax} Seats</span>
                       <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">₹{vehicle.pricePerKm}/KM</span>
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">₹{tripType === "one-way" ? getOneWayRate(vehicle.slug, vehicle.model) : vehicle.pricePerKm}/KM</span>
                       <span className="w-1 h-1 bg-slate-300 rounded-full" />
                       <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">₹{Math.ceil(fares.total / Number(vehicle.pax))}/head</span>
                     </div>
@@ -2045,7 +2070,7 @@ const BookingPageContent = () => {
                 <p className="text-sm font-black text-slate-900 uppercase truncate">{selectedVehicle.model}</p>
                 <div className="flex items-center gap-3 mt-1 text-[8px] font-black text-slate-400 uppercase tracking-widest">
                   <span className="flex items-center gap-1"><Users className="w-3 h-3 text-emerald-500" /> {selectedVehicle.pax} Seats</span>
-                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-500" /> ₹{selectedVehicle.pricePerKm}/KM</span>
+                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-emerald-500" /> ₹{tripType === "one-way" ? getOneWayRate(selectedVehicle.slug, selectedVehicle.model) : selectedVehicle.pricePerKm}/KM</span>
                 </div>
               </div>
               <CheckCircle2 className="w-6 h-6 text-emerald-600 absolute -top-2 -right-2 bg-white rounded-full shadow-lg" />
@@ -2074,7 +2099,7 @@ const BookingPageContent = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price per KM</span>
-                  <span className="text-sm font-black text-slate-900">₹{selectedVehicle.pricePerKm}/KM</span>
+                  <span className="text-sm font-black text-slate-900">₹{tripType === "one-way" ? getOneWayRate(selectedVehicle.slug, selectedVehicle.model) : selectedVehicle.pricePerKm}/KM</span>
                 </div>
                 {f.bhatta > 0 && (
                   <div className="flex justify-between items-center">
@@ -2114,8 +2139,9 @@ const BookingPageContent = () => {
 *Distance:* ~${f.totalKm} KM
 
 *PRICING BREAKDOWN:*
-*Base Price:* ₹${f.base.toLocaleString()}
-*Driver Bhatta:* ₹${f.bhatta.toLocaleString()} (${f.days} Day${f.days > 1 ? "s" : ""})
+${tripType === "one-way" ? `*One Way Base Fare:* ₹${f.base.toLocaleString()}
+*One Way Premium Charge:* ₹1,000` : `*Base Price:* ₹${f.base.toLocaleString()}
+*Driver Bhatta:* ₹${f.bhatta.toLocaleString()} (${f.days} Day${f.days > 1 ? "s" : ""})`}
 *Total Estimated Fare:* ₹${f.total.toLocaleString()}
 -----------------------------
 Please confirm availability and book my ride!
@@ -2157,6 +2183,20 @@ Please confirm availability and book my ride!
           </div>
         )}
       </AnimatePresence>
+      <LeadCaptureModal
+        isOpen={!isLeadSubmitted}
+        tripDetails={{
+          pickup: fromSearch,
+          drop: toSearch,
+          tripType: isAirportMode ? `Airport (${airportTrip === 'from-airport' ? 'From' : 'To'})` : tripType,
+          date: pickupDate,
+          distance: calculatedDistance,
+        }}
+        onSuccess={() => {
+          setIsLeadSubmitted(true);
+          sessionStorage.setItem("lead_submitted", "true");
+        }}
+      />
     </main>
   );
 };

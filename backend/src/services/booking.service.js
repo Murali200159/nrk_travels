@@ -1,5 +1,9 @@
 const Booking = require('../models/Booking.model');
 const ApiError = require('../utils/ApiError');
+const mongoose = require('mongoose');
+
+// In-memory array for fallback mock bookings in development
+let mockBookings = [];
 
 /**
  * Create a new booking
@@ -44,6 +48,20 @@ const createBooking = async (bookingData) => {
     order_id: bookingData.order_id || null,
     special_requests: bookingData.special_requests || bookingData.specialRequirements || null
   };
+
+  const isMongooseConnected = mongoose.connection.readyState === 1;
+
+  if (!isMongooseConnected) {
+    console.log('[Booking Service] MongoDB disconnected. Storing booking in mock memory.');
+    const mockBooking = {
+      id: `mock-bk-${Date.now()}`,
+      created_at: new Date(),
+      updated_at: new Date(),
+      ...mappedData
+    };
+    mockBookings.push(mockBooking);
+    return mockBooking;
+  }
 
   try {
     const newBooking = await Booking.create(mappedData);

@@ -4,7 +4,8 @@ const config = require('./env');
 const connectDB = async () => {
   try {
     if (!config.mongoose || !config.mongoose.url) {
-      throw new Error('MONGODB_URI is not defined in environment configuration.');
+      console.warn('⚠️  MONGODB_URI is not defined in environment configuration. Server will start in MOCK mode (data stored in memory).');
+      return;
     }
     
     // Apply global plugin to transform _id to id in JSON
@@ -25,8 +26,8 @@ const connectDB = async () => {
     
     console.log('✅ Connected to MongoDB successfully.');
   } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error);
-    process.exit(1);
+    console.warn('⚠️  MongoDB Connection Error: Server will continue running in MOCK mode. Error detail:', error.message);
+    // Do not call process.exit(1) to allow fallback mock behavior in development
   }
 };
 

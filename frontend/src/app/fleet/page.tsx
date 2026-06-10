@@ -21,6 +21,16 @@ const fullFleet = [
     color: "emerald"
   },
   {
+    slug: "toyota-sedan",
+    model: "Toyota Sedan",
+    type: "Premium Sedan",
+    pricePerKm: "14",
+    pax: "4",
+    features: ["AC", "Touchscreen", "Spacious Boot Space", "Elite Driver"],
+    image: "/images/fleet/glanza.png",
+    color: "emerald"
+  },
+  {
     slug: "toyota-glanza",
     model: "Toyota Glanza",
     type: "Luxury Hatchback",
@@ -53,26 +63,46 @@ const fullFleet = [
   {
     slug: "innova-crysta",
     model: "Innova Crysta",
-    type: "Executive Luxury",
-    pricePerKm: "20",
+    type: "Executive Luxury MUV",
+    pricePerKm: "22",
     pax: "7",
     features: ["Premium Leather Seats", "Rear AC", "Silent Cabin", "VIP Experience"],
     image: "/images/fleet/innova_crysta.png",
     color: "emerald"
   },
   {
+    slug: "innova-hycross",
+    model: "Innova Hycross",
+    type: "Premium Hybrid MUV",
+    pricePerKm: "24",
+    pax: "7",
+    features: ["Ottoman Reclining Seats", "Dual Zone AC", "Panoramic Roof", "Ultra Luxury Cabin"],
+    image: "/images/fleet/innova_crysta.png",
+    color: "emerald"
+  },
+  {
+    slug: "12-seater-tempo",
+    model: "12 Seater Tempo Traveller",
+    type: "Luxury Mini Coach",
+    pricePerKm: "30",
+    pax: "12",
+    features: ["Plush Push-back Seats", "Individual AC Vents", "Entertainment System", "Ample Luggage"],
+    image: "/images/fleet/tempo_traveller.png",
+    color: "emerald"
+  },
+  {
     slug: "tempo-traveller",
-    model: "Tempo Traveller",
-    type: "Group Luxury",
+    model: "17 Seater Tempo Traveller",
+    type: "Group Luxury Coach",
     pricePerKm: "35",
     pax: "17",
-    features: ["Spacious", "Entertainment System", "Individual AC", "Professional Captain"],
+    features: ["Spacious Cabin", "Entertainment System", "Individual AC", "Professional Captain"],
     image: "/images/fleet/tempo_traveller.png",
     color: "emerald"
   },
   {
     slug: "urbania",
-    model: "Urbania",
+    model: "Force Urbania",
     type: "Ultra-Luxury Coach",
     pricePerKm: "40",
     pax: "16",
@@ -81,23 +111,43 @@ const fullFleet = [
     color: "orange"
   },
   {
-    slug: "luxury-bus",
-    model: "Luxury Bus",
-    type: "Premium Tour Coach",
-    pricePerKm: "60",
-    pax: "40",
-    features: ["AC", "Reclining Seats", "Premium Entertainment", "Professional Captain"],
+    slug: "mini-bus",
+    model: "22 Seater Mini Bus",
+    type: "Mini Bus",
+    pricePerKm: "40",
+    pax: "22",
+    features: ["AC", "Push-back Seats", "Dynamic Audio/TV", "Ample Luggage space", "Professional Captain"],
+    image: "/images/fleet/minibus.png",
+    color: "orange"
+  },
+  {
+    slug: "28-seater-bus",
+    model: "28 Seater Mini Bus",
+    type: "Mini Bus",
+    pricePerKm: "45",
+    pax: "28",
+    features: ["Air Conditioning", "Reclining Comfort Seats", "Plush Interiors", "Professional Captain"],
     image: "/images/fleet/bus.png",
     color: "orange"
   },
   {
-    slug: "mini-bus",
-    model: "21-Seater Mini Bus",
-    type: "Executive Mini Coach",
-    pricePerKm: "45",
-    pax: "21",
-    features: ["AC", "Push-back Seats", "Dynamic Audio/TV", "Ample Luggage space", "Professional Captain"],
-    image: "/images/fleet/minibus.png",
+    slug: "36-seater-bus",
+    model: "36 Seater Bus",
+    type: "Luxury Tour Coach",
+    pricePerKm: "55",
+    pax: "36",
+    features: ["Air Conditioning", "Air Suspension", "Reclining Comfort Seats", "Professional Captain"],
+    image: "/images/fleet/bus.png",
+    color: "orange"
+  },
+  {
+    slug: "luxury-bus",
+    model: "40 Seater Bus",
+    type: "Premium Tour Coach",
+    pricePerKm: "65",
+    pax: "40",
+    features: ["Air Conditioning", "Reclining Seats", "Premium Entertainment", "Professional Captain"],
+    image: "/images/fleet/bus.png",
     color: "orange"
   }
 ];

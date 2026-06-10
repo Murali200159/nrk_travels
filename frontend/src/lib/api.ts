@@ -43,6 +43,7 @@ export const submitContact = (data: {
 }) => request('/contact', { method: 'POST', body: data as unknown as Record<string, unknown> });
 
 // ──────────────────────────────────────────────
+// ──────────────────────────────────────────────
 // Careers
 // ──────────────────────────────────────────────
 export const submitCareerApplication = (data: {
@@ -52,6 +53,23 @@ export const submitCareerApplication = (data: {
   position: string;
   resume_url?: string;
 }) => request('/careers', { method: 'POST', body: data as unknown as Record<string, unknown> });
+
+// ──────────────────────────────────────────────
+// Enquiries
+// ──────────────────────────────────────────────
+export const submitEnquiry = (data: {
+  name: string;
+  mobile: string;
+  whatsapp: string;
+  pickup: string;
+  drop?: string;
+  tripType: string;
+  date?: string;
+  distance?: number;
+}) => request<{ success: boolean; data: { id: string; [key: string]: unknown } }>(
+  '/enquiries',
+  { method: 'POST', body: data as unknown as Record<string, unknown> }
+);
 
 // ──────────────────────────────────────────────
 // Bookings

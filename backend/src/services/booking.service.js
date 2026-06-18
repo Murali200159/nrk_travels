@@ -123,6 +123,14 @@ const getBookings = async ({ search, status, bookingType, page = 1, limit = 10 }
  * Get booking by ID
  */
 const getBookingById = async (id) => {
+  if (id && id.startsWith('mock-bk-')) {
+    const mockBooking = mockBookings.find(b => b.id === id);
+    if (mockBooking) {
+      return mockBooking;
+    }
+    throw new ApiError(404, 'Mock booking not found');
+  }
+
   try {
     const booking = await Booking.findById(id);
     if (!booking) {
@@ -139,6 +147,17 @@ const getBookingById = async (id) => {
  * Update a booking (specifically its status)
  */
 const updateBookingStatus = async (id, statusData) => {
+  if (id && id.startsWith('mock-bk-')) {
+    const mockBookingIndex = mockBookings.findIndex(b => b.id === id);
+    if (mockBookingIndex !== -1) {
+      if (statusData.booking_status) mockBookings[mockBookingIndex].booking_status = statusData.booking_status;
+      if (statusData.status) mockBookings[mockBookingIndex].booking_status = statusData.status;
+      if (statusData.payment_status) mockBookings[mockBookingIndex].payment_status = statusData.payment_status;
+      return mockBookings[mockBookingIndex];
+    }
+    throw new ApiError(404, 'Mock booking not found');
+  }
+
   const updatePayload = {};
   if (statusData.booking_status) updatePayload.booking_status = statusData.booking_status;
   if (statusData.status) updatePayload.booking_status = statusData.status;

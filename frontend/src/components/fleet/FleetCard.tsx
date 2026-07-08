@@ -27,7 +27,7 @@ const FleetCard: React.FC<FleetCardProps> = ({ slug, model, pricePerKm, pax, ind
         ease: [0.25, 1, 0.5, 1]
       }}
       whileHover={{ y: -10 }}
-      className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group h-full flex flex-col"
+      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group h-full flex flex-col"
     >
       {/* Vehicle Image Container */}
       <div className="relative aspect-[16/10] bg-emerald-50 flex items-center justify-center overflow-hidden">
@@ -40,6 +40,7 @@ const FleetCard: React.FC<FleetCardProps> = ({ slug, model, pricePerKm, pax, ind
             src={image}
             alt={model}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover group-hover:brightness-110 transition-all duration-1000"
           />
         </motion.div>

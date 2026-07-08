@@ -92,7 +92,7 @@ const RefundPolicy = () => {
 
               {refundProcess.map((step, i) => (
                 <div key={i} className="relative flex flex-col items-center text-center group">
-                  <div className="w-24 h-24 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:bg-emerald-600 transition-all duration-500 group-hover:scale-110 relative z-10">
+                  <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:bg-emerald-600 transition-all duration-500 group-hover:scale-110 relative z-10">
                     <step.icon className="w-10 h-10 text-emerald-500 group-hover:text-white transition-colors" />
                   </div>
                   <h4 className="text-xl font-black mb-3">{step.title}</h4>
@@ -117,7 +117,7 @@ const RefundPolicy = () => {
               {policies.map((policy, i) => (
                 <div
                   key={i}
-                  className="p-10 rounded-[3rem] bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 hover:shadow-2xl transition-all"
+                  className="p-10 rounded-2xl bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 hover:shadow-2xl transition-all"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 mb-8">
                     <policy.icon className="w-7 h-7" />
@@ -142,7 +142,7 @@ const RefundPolicy = () => {
       <section className="py-24 bg-orange-500/5 dark:bg-orange-500/5 border-y border-orange-500/10">
         <div className="max-w-4xl mx-auto px-6">
           <SectionReveal>
-            <div className="flex flex-col md:flex-row items-center gap-12 bg-white dark:bg-emerald-950/40 p-12 rounded-[3rem] border border-orange-500/20">
+            <div className="flex flex-col md:flex-row items-center gap-12 bg-white dark:bg-emerald-950/40 p-12 rounded-2xl border border-orange-500/20">
               <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center text-white flex-shrink-0 animate-pulse">
                 <ShieldAlert className="w-10 h-10" />
               </div>

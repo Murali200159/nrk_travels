@@ -62,7 +62,7 @@ const TestimonialsSection = () => {
               <div key={idx} className="flex-[0_0_85%] sm:flex-[0_0_45%] xl:flex-[0_0_31%] min-w-0">
                 <motion.div
                   whileHover={{ y: -12 }}
-                  className="bg-white dark:bg-[#022c22] rounded-[3rem] p-8 md:p-10 h-full flex flex-col shadow-premium hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group"
+                  className="bg-white dark:bg-[#022c22] rounded-2xl p-8 md:p-10 h-full flex flex-col shadow-premium hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group"
                 >
                   <div className="flex justify-between items-start mb-8">
                     <Quote className="w-12 h-12 text-emerald-100 dark:text-emerald-900 group-hover:text-orange-500/20 transition-colors duration-500" />

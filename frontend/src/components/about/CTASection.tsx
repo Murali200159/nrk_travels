@@ -14,7 +14,7 @@ const CTASection = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-[3rem] lg:rounded-[4rem] p-10 lg:p-24 text-center relative overflow-hidden shadow-sm border border-emerald-500/10"
+          className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl lg:rounded-[4rem] p-10 lg:p-24 text-center relative overflow-hidden shadow-sm border border-emerald-500/10"
         >
           {/* Abstract background shapes */}
           <div className="absolute top-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full -translate-y-1/2 -translate-x-1/2 blur-[100px]" />

@@ -139,7 +139,7 @@ const ContactPage = () => {
               <SectionReveal key={i} delay={i * 0.1}>
                 <a
                   href={channel.href}
-                  className="block p-10 rounded-[3rem] bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all group"
+                  className="block p-10 rounded-2xl bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all group"
                 >
                   <div className={cn(
                     "w-16 h-16 rounded-2xl flex items-center justify-center mb-8 text-white transition-transform group-hover:scale-110 group-hover:rotate-6 shadow-xl",
@@ -292,7 +292,7 @@ const ContactPage = () => {
                   ))}
                 </div>
 
-                <div className="mt-12 rounded-[3rem] overflow-hidden h-64 border-4 border-white dark:border-emerald-950/40 shadow-3xl grayscale hover:grayscale-0 transition-all duration-700">
+                <div className="mt-12 rounded-2xl overflow-hidden h-64 border-4 border-white dark:border-emerald-950/40 shadow-3xl grayscale hover:grayscale-0 transition-all duration-700">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3800.2!2d83.3!3d17.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQyJzAwLjAiTiA4M8KwMTgnMDAuMCJF!5e0!3m2!1sen!2sin!4v1620000000000!5m2!1sen!2sin"
                     width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"

@@ -223,7 +223,7 @@ const HelpCenterPage = () => {
               ))}
 
               {filteredData.length === 0 && (
-                <div className="text-center py-20 bg-slate-100/50 dark:bg-emerald-950/10 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-emerald-500/10">
+                <div className="text-center py-20 bg-slate-100/50 dark:bg-emerald-950/10 rounded-2xl border-2 border-dashed border-slate-200 dark:border-emerald-500/10">
                   <HelpCircle className="w-16 h-16 text-slate-300 mx-auto mb-6" />
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No matching results found</h3>
                   <p className="text-slate-500 font-medium mb-8">Try searching for different keywords or browse categories.</p>

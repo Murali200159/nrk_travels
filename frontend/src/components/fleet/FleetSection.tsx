@@ -194,7 +194,7 @@ const FleetSection = () => {
         </div>
 
         {/* Safety Badge */}
-        <div className="glass-emerald rounded-[3rem] p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 mt-24 relative overflow-hidden border border-emerald-500/10">
+        <div className="glass-emerald rounded-2xl p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 mt-24 relative overflow-hidden border border-emerald-500/10">
           <div className="flex items-center justify-center gap-3 text-emerald-600">
             <Shield className="w-6 h-6 fill-current opacity-20" />
             <span className="text-[11px] font-black uppercase tracking-[0.4em]">Diamond Safety Protocol</span>

@@ -26,7 +26,7 @@ const SimpleDropdown: React.FC<SimpleDropdownProps> = ({ isOpen, items, title, o
             "bg-white/95 backdrop-blur-3xl",
             "border border-slate-200/50",
             "shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]",
-            "rounded-[2rem] overflow-hidden"
+            "rounded-2xl overflow-hidden"
           )}
         >
           <div className="px-5 py-3 mb-1">

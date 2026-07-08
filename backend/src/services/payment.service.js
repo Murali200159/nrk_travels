@@ -4,6 +4,7 @@ const config = require('../config/env');
 const Booking = require('../models/Booking.model');
 const ApiError = require('../utils/ApiError');
 const notificationService = require('./paymentNotificationService');
+const bookingService = require('./booking.service');
 const mongoose = require('mongoose');
 
 /**
@@ -13,8 +14,11 @@ const createOrder = async (bookingId) => {
   // 1. Fetch booking details to get the amount
   let booking;
   try {
-    booking = await Booking.findById(bookingId);
+    booking = await bookingService.getBookingById(bookingId);
   } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 404) {
+      throw error;
+    }
     throw new ApiError(500, `Error fetching booking: ${error.message}`);
   }
 
@@ -50,11 +54,20 @@ const createOrder = async (bookingId) => {
 
   // 3. Update booking with order_id and set status/payment_status to pending
   try {
-    await Booking.findByIdAndUpdate(bookingId, { 
-      order_id: order.id, 
-      booking_status: 'pending',
-      payment_status: 'pending' 
-    });
+    if (bookingId.toString().startsWith('mock-bk-')) {
+      // For mock bookings, we can update via the service or directly modify the object 
+      // but since bookingService.updateBookingStatus doesn't support updating order_id directly,
+      // we might need to rely on the fact that mock objects are references, but let's be safe.
+      booking.order_id = order.id;
+      booking.booking_status = 'pending';
+      booking.payment_status = 'pending';
+    } else {
+      await Booking.findByIdAndUpdate(bookingId, { 
+        order_id: order.id, 
+        booking_status: 'pending',
+        payment_status: 'pending' 
+      });
+    }
   } catch (updateError) {
     throw new ApiError(500, `Failed to update booking with order ID: ${updateError.message}`);
   }

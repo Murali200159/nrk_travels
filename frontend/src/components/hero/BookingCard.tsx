@@ -83,7 +83,7 @@ const BookingCard = () => {
 
   return (
     <div className="w-full max-w-[100%] mx-auto z-20 relative px-4">
-      <div className="bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-premium relative overflow-visible border border-emerald-500/10 backdrop-blur-3xl">
+      <div className="bg-white rounded-[2.5rem] lg:rounded-2xl shadow-premium relative overflow-visible border border-emerald-500/10 backdrop-blur-3xl">
         {/* Info Badge - Top on Mobile */}
         <div className="bg-orange-600 p-3 lg:hidden flex items-center justify-between px-6 rounded-t-[2.5rem]">
           <div className="flex items-center gap-2">

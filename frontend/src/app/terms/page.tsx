@@ -63,7 +63,7 @@ const TermsPage = () => {
         return (
           <div className="space-y-8">
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">3. Booking Terms</h2>
-            <div className="p-10 rounded-[3rem] bg-slate-50 border border-slate-200 space-y-6">
+            <div className="p-10 rounded-2xl bg-slate-50 border border-slate-200 space-y-6">
               <p className="text-lg text-slate-700 font-bold leading-relaxed">
                 All bookings are subject to vehicle availability. While we strive to provide the exact vehicle model requested, Vizag Taxi reserves the right to provide an equivalent or higher category vehicle in case of unforeseen circumstances.
               </p>
@@ -111,7 +111,7 @@ const TermsPage = () => {
         return (
           <div className="space-y-8">
             <h2 className="text-4xl font-black text-slate-900 tracking-tight">5. Driver Policies</h2>
-            <div className="p-10 rounded-[3rem] bg-white border border-slate-200 space-y-6 shadow-sm">
+            <div className="p-10 rounded-2xl bg-white border border-slate-200 space-y-6 shadow-sm">
               <p className="text-lg text-slate-700 font-bold leading-relaxed">
                 Our drivers are trained professionals. Customers are expected to treat them with respect.
               </p>
@@ -217,7 +217,7 @@ const TermsPage = () => {
                   <SectionReveal>
                     {getContent(activeSection)}
 
-                    <div className="mt-16 p-12 rounded-[3rem] bg-emerald-50 border border-emerald-200 text-center">
+                    <div className="mt-16 p-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
                       <h3 className="text-2xl font-black text-slate-900 mb-4">Still have legal questions?</h3>
                       <p className="text-slate-600 font-bold mb-8">Our compliance team is ready to provide clarifications on any clause.</p>
                       <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black transition-all shadow-xl shadow-emerald-600/20 border-none">

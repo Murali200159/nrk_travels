@@ -106,7 +106,7 @@ const TempoSection = () => {
                 <div key={idx} className="flex-[0_0_85%] sm:flex-[0_0_45%] xl:flex-[0_0_31%] min-w-0">
                   <motion.div
                     whileHover={{ y: -12 }}
-                    className="bg-white rounded-[3rem] p-8 md:p-10 h-full flex flex-col border border-emerald-500/5 shadow-premium hover:shadow-emerald transition-all duration-500 group/card"
+                    className="bg-white rounded-2xl p-8 md:p-10 h-full flex flex-col border border-emerald-500/5 shadow-premium hover:shadow-emerald transition-all duration-500 group/card"
                   >
                     {/* Top Section */}
                     <div className="flex justify-between items-start mb-10">
@@ -182,7 +182,7 @@ const TempoSection = () => {
         </div>
 
         {/* Safety Badge */}
-        <div className="bg-emerald-500/5 rounded-[3rem] p-8 lg:p-14 max-w-4xl mx-auto text-center space-y-6 mt-24 relative overflow-hidden border-2 border-emerald-500/10">
+        <div className="bg-emerald-500/5 rounded-2xl p-8 lg:p-14 max-w-4xl mx-auto text-center space-y-6 mt-24 relative overflow-hidden border-2 border-emerald-500/10">
           <div className="flex items-center justify-center gap-3 text-emerald-600">
             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
               <ShieldCheck className="w-6 h-6" />

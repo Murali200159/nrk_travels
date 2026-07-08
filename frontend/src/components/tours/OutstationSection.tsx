@@ -104,7 +104,7 @@ const OutstationSection = () => {
                 <div key={idx} className="flex-[0_0_85%] sm:flex-[0_0_45%] xl:flex-[0_0_31%] min-w-0">
                   <motion.div
                     whileHover={{ y: -12 }}
-                    className="bg-gradient-to-br from-emerald-50 to-lime-50 dark:from-emerald-950/20 dark:to-lime-950/20 rounded-[3rem] p-8 md:p-10 h-full flex flex-col shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 relative overflow-hidden group/card"
+                    className="bg-gradient-to-br from-emerald-50 to-lime-50 dark:from-emerald-950/20 dark:to-lime-950/20 rounded-2xl p-8 md:p-10 h-full flex flex-col shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 relative overflow-hidden group/card"
                   >
                     {/* Temple Illustration Background */}
                     <div className="absolute right-0 bottom-0 opacity-[0.05] pointer-events-none group-hover/card:scale-125 transition-transform duration-1000">
@@ -182,7 +182,7 @@ const OutstationSection = () => {
         </div>
 
         {/* Reliable Service Badge */}
-        <div className="glass-emerald rounded-[3rem] p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 mt-20 relative overflow-hidden border border-emerald-500/10">
+        <div className="glass-emerald rounded-2xl p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 mt-20 relative overflow-hidden border border-emerald-500/10">
           <div className="flex items-center justify-center gap-3 text-emerald-600 dark:text-lime-400">
             <CheckCircle2 className="w-6 h-6 fill-current opacity-20 dark:fill-lime-400/10" />
             <span className="text-[11px] font-black uppercase tracking-[0.4em]">All-Inclusive Pricing</span>

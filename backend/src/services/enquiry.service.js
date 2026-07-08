@@ -1,5 +1,5 @@
 const Enquiry = require('../models/Enquiry.model');
-const sendWhatsApp = require('./notifications/sendWhatsApp');
+const sendWhatsApp = require('../utils/sendWhatsApp');
 const config = require('../config/env');
 const mongoose = require('mongoose');
 

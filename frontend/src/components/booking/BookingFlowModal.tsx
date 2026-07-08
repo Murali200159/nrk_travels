@@ -136,34 +136,62 @@ const getEstimatedDistance = (from: string, to: string): number => {
   if (other.includes("rajahmundry")) return 190;
   if (other.includes("airport")) return 35;
 
-  return 145; 
+  return 145;
 };
 
 const getLocalPackagePrice = (vehicleSlug: string, localPackage: string): number => {
   const s = vehicleSlug.toLowerCase();
-  let mult = 1.0;
-  if (localPackage.includes("10 Hours")) mult = 1.2;
-  if (localPackage.includes("12 Hours")) mult = 1.4;
-
-  if (s.includes("dzire") || s.includes("glanza") || s.includes("amaze") || s === "sedan" || s === "hatchback") {
-    return Math.round(2200 * mult);
+  
+  if (s.includes("dzire") || s.includes("glanza") || s.includes("amaze") || s.includes("sedan") || s.includes("hatchback")) {
+    if (localPackage.includes("4 Hours")) return 1200;
+    if (localPackage.includes("6 Hours")) return 1800;
+    if (localPackage.includes("8 Hours")) return 2400;
+    if (localPackage.includes("10 Hours")) return 3000;
+    if (localPackage.includes("12 Hours")) return 3600;
+    return 2400;
   }
-  if (s.includes("innova") || s.includes("ertiga")) {
-    return Math.round(4000 * mult);
+  if (s.includes("ertiga")) {
+    if (localPackage.includes("4 Hours")) return 1400;
+    if (localPackage.includes("6 Hours")) return 2100;
+    if (localPackage.includes("8 Hours")) return 2800;
+    if (localPackage.includes("10 Hours")) return 3500;
+    if (localPackage.includes("12 Hours")) return 4200;
+    return 2800;
+  }
+  if (s.includes("innova")) {
+    if (localPackage.includes("12 Hours")) return 6000;
+    return 5000;
   }
   if (s.includes("12-seater") || s.includes("12seater")) {
-    return Math.round(5000 * mult);
+    if (localPackage.includes("12 Hours")) return 7800;
+    return 6500;
   }
-  if (s.includes("tempo") || s.includes("traveller") || s.includes("urbania") || s.includes("17")) {
-    return Math.round(6000 * mult);
+  if (s.includes("tempo") || s.includes("traveller") || s.includes("17")) {
+    if (localPackage.includes("12 Hours")) return 9000;
+    return 7500;
   }
-  if (s.includes("mini") || s.includes("20") || s.includes("21") || s.includes("26")) {
-    return Math.round(7000 * mult);
+  if (s.includes("urbania")) {
+    if (localPackage.includes("12 Hours")) return 9600;
+    return 8000;
   }
-  if (s.includes("27")) {
-    return Math.round(9000 * mult);
+  if (s.includes("20") || s.includes("21") || s.includes("22") || s.includes("26")) {
+    if (localPackage.includes("12 Hours")) return 10200;
+    return 8500;
   }
-  return Math.round(12000 * mult); 
+  if (s.includes("27") || s.includes("28")) {
+    if (localPackage.includes("12 Hours")) return 10800;
+    return 9000;
+  }
+  if (s.includes("36")) {
+    if (localPackage.includes("12 Hours")) return 12000;
+    return 10000;
+  }
+  if (s.includes("40") || s.includes("50")) {
+    if (localPackage.includes("12 Hours")) return 13800;
+    return 11500;
+  }
+  
+  return 5000;
 };
 
 const BookingFlowModal = ({
@@ -199,7 +227,17 @@ const BookingFlowModal = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(1, diffDays);
   }, [pickupDate, returnDate]);
-  
+
+  useEffect(() => {
+    if (vehicle && bookingMode === "day" && dayTripScope === "local") {
+      const isVehicle10HOnly = !(vehicle.slug?.includes("dzire") || vehicle.slug?.includes("glanza") || vehicle.slug?.includes("amaze") || vehicle.slug?.includes("sedan") || vehicle.slug?.includes("hatchback") || vehicle.slug?.includes("ertiga"));
+      const isPackageLessThan10H = localPackage.includes("4 Hours") || localPackage.includes("6 Hours") || localPackage.includes("8 Hours");
+      if (isVehicle10HOnly && isPackageLessThan10H) {
+        setLocalPackage("10 Hours / 100 KM");
+      }
+    }
+  }, [vehicle, bookingMode, dayTripScope, localPackage]);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -449,7 +487,7 @@ const BookingFlowModal = ({
       const now = new Date();
       const pDate = prefilledPickupDate || now.toISOString().slice(0, 16);
       setPickupDate(pDate);
-      
+
       const nextDayTime = (prefilledPickupDate ? new Date(prefilledPickupDate) : now).getTime() + (86400000 * (prefilledDays || 1));
       const rDate = prefilledReturnDate || new Date(nextDayTime).toISOString().slice(0, 16);
       setReturnDate(rDate);
@@ -630,7 +668,7 @@ const BookingFlowModal = ({
   // Unified Fare Calculations
   const getCalculatedFare = (): { price: number; distance: number; time: string; breakdown: { base: number; bhatta: number; extraInfo?: string } } => {
     const terms = getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax);
-    
+
     if (bookingMode === "day" && dayTripScope === "local") {
       const basePrice = getLocalPackagePrice(vehicle.slug || "", localPackage);
       const bhatta = terms.driverBhatta;
@@ -672,7 +710,7 @@ const BookingFlowModal = ({
 
     // KM Booking Mode - One Way vs Round Trip Outstation
     const distance = osrmDistance !== null ? osrmDistance : getEstimatedDistance(fromLocation, toLocation);
-    
+
     if (tripType === "one-way") {
       const oneWayRate = getOneWayRate(vehicle.slug, vehicle.model);
       const basePrice = Math.ceil(distance * oneWayRate);
@@ -1135,7 +1173,13 @@ const BookingFlowModal = ({
                                     onChange={(e) => setLocalPackage(e.target.value)}
                                     className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-5 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
                                   >
-                                    <option>8 Hours / 80 KM</option>
+                                    {!(vehicle?.slug?.includes("innova") || vehicle?.slug?.includes("12-seater") || vehicle?.slug?.includes("12seater") || vehicle?.slug?.includes("tempo") || vehicle?.slug?.includes("traveller") || vehicle?.slug?.includes("17") || vehicle?.slug?.includes("urbania") || vehicle?.slug?.includes("20") || vehicle?.slug?.includes("21") || vehicle?.slug?.includes("22") || vehicle?.slug?.includes("26") || vehicle?.slug?.includes("27") || vehicle?.slug?.includes("28") || vehicle?.slug?.includes("36") || vehicle?.slug?.includes("40") || vehicle?.slug?.includes("50")) && (
+                                      <>
+                                        <option>4 Hours / 40 KM</option>
+                                        <option>6 Hours / 60 KM</option>
+                                        <option>8 Hours / 80 KM</option>
+                                      </>
+                                    )}
                                     <option>10 Hours / 100 KM</option>
                                     <option>12 Hours / 120 KM</option>
                                   </select>
@@ -1200,7 +1244,7 @@ const BookingFlowModal = ({
                               <button type="button" onClick={() => setTripType("round-trip")} className={cn("flex-1 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", tripType === "round-trip" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400")}>Round Trip</button>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Date & Time</label>
@@ -1258,7 +1302,7 @@ const BookingFlowModal = ({
                       <div className="relative h-60 rounded-[2rem] bg-slate-100 overflow-hidden border border-slate-200 group">
                         <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/83.3,17.7,11,0/1200x600?access_token=pk.eyJ1IjoicHJhZ2huZWFyIiwiYSI6ImNrcWwwamU1czAwaDUyb28waWwwamU1czAifQ.F_F0_v_v_v_v_v_v_v_v_v_v')] bg-cover bg-center opacity-85 group-hover:scale-105 transition-transform duration-1000 animate-pulse" />
                         <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent" />
-                        
+
                         {fromLocation && (
                           <div className="absolute top-1/3 left-1/3 animate-bounce">
                             <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 border-4 border-white">
@@ -1266,7 +1310,7 @@ const BookingFlowModal = ({
                             </div>
                           </div>
                         )}
-                        
+
                         <div className="absolute top-4 right-4 glass px-4 py-2 rounded-xl border border-white/50 shadow-xl">
                           <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">Interactive Map View</span>
                         </div>
@@ -1295,7 +1339,7 @@ const BookingFlowModal = ({
                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Pricing Breakdown</p>
                         <Info className="w-4 h-4 text-emerald-600" />
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div className="flex justify-between items-baseline border-b border-emerald-500/10 pb-2">
                           <span className="text-[10px] font-black text-slate-500 uppercase">Base Package Price</span>
@@ -1316,7 +1360,7 @@ const BookingFlowModal = ({
                           <span className="text-3xl font-black text-emerald-600 tracking-tighter">₹{totalWithGst.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
-                      
+
                       <p className="text-[9px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
                         Includes fuel, driver allowance, and basic maintenance. Toll charges & parking fees are completely excluded.
                       </p>

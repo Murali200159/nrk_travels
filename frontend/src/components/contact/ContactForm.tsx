@@ -84,7 +84,7 @@ const ContactForm = () => {
           <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Need <span className="text-orange-500">Immediate</span> Help?</h3>
           
           {/* Call Box */}
-          <div className="p-6 rounded-[2rem] bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
+          <div className="p-6 rounded-2xl bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
                 <Phone className="w-6 h-6" />
@@ -100,7 +100,7 @@ const ContactForm = () => {
           </div>
 
           {/* WhatsApp Box */}
-          <div className="p-6 rounded-[2rem] bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
+          <div className="p-6 rounded-2xl bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-xl bg-emerald-400 flex items-center justify-center text-white">
                 <MessageCircle className="w-6 h-6" />
@@ -116,7 +116,7 @@ const ContactForm = () => {
           </div>
 
           {/* Email Box */}
-          <div className="p-6 rounded-[2rem] bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
+          <div className="p-6 rounded-2xl bg-white dark:bg-emerald-950/10 border border-slate-100 dark:border-emerald-500/10 group">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white">
                 <Mail className="w-6 h-6" />
@@ -137,7 +137,7 @@ const ContactForm = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="p-8 rounded-[2rem] bg-slate-900 text-white"
+          className="p-8 rounded-2xl bg-slate-900 text-white"
         >
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white">

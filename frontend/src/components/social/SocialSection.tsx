@@ -35,9 +35,9 @@ const SocialSection = () => {
             <motion.div
               key={idx}
               whileHover={{ y: -10 }}
-              className="bg-white dark:bg-[#022c22] rounded-[3rem] p-8 md:p-10 flex flex-col items-center text-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group"
+              className="bg-white dark:bg-[#022c22] rounded-2xl p-8 md:p-10 flex flex-col items-center text-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group"
             >
-              <div className="w-20 h-20 rounded-[2rem] bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-all duration-500">
+              <div className="w-20 h-20 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-all duration-500">
                 <social.icon className="w-10 h-10 text-emerald-600 group-hover:text-white" />
               </div>
               <span className="text-xl font-black text-emerald-950 dark:text-emerald-50 mb-3 tracking-tight">{social.name}</span>
@@ -49,7 +49,7 @@ const SocialSection = () => {
         </div>
 
         {/* Review Banner */}
-        <div className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-[3rem] lg:rounded-[4rem] p-12 lg:p-20 text-center relative overflow-hidden border border-emerald-500/10 shadow-sm">
+        <div className="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl lg:rounded-[4rem] p-12 lg:p-20 text-center relative overflow-hidden border border-emerald-500/10 shadow-sm">
           <div className="absolute top-0 left-0 w-96 h-96 bg-lime-400/5 blur-[100px] rounded-full -translate-x-1/2 -translate-y-1/2" />
           <div className="relative z-10 space-y-8">
             <div className="flex items-center justify-center gap-2 text-lime-500 mb-2">

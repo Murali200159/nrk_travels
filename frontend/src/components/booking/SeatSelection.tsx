@@ -28,7 +28,7 @@ const SeatButton = ({ id, status, onClick, price, gender }: {
       status === "selected"
         ? gender === "female"
           ? "bg-[#e11d48] border-[#be123c] text-white shadow-lg shadow-rose-600/20"
-          : "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20"
+          : "bg-emerald-600 border-emerald-700 text-white shadow-lg shadow-emerald-600/20"
         : status === "booked"
           ? "bg-[#94a3b8] border-[#64748b] text-white cursor-not-allowed opacity-60"
           : status === "reserved"
@@ -42,7 +42,7 @@ const SeatButton = ({ id, status, onClick, price, gender }: {
       <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
         <div className={cn(
           "w-2 h-2 rounded-full",
-          gender === "female" ? "bg-rose-600" : "bg-blue-600"
+          gender === "female" ? "bg-rose-600" : "bg-emerald-600"
         )} />
       </div>
     )}
@@ -104,7 +104,7 @@ const SeatSelection = ({
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-600" />
+            <div className="w-4 h-4 rounded bg-emerald-600" />
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Male Selected</span>
           </div>
           <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ const SeatSelection = ({
                 onClick={() => setGender("male")}
                 className={cn(
                   "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                  gender === "male" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-slate-50 text-slate-400"
+                  gender === "male" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-slate-50 text-slate-400"
                 )}
               >
                 Male
@@ -147,7 +147,7 @@ const SeatSelection = ({
         </div>
 
         {/* Seat Grid Layout */}
-        <div className="bg-slate-50 rounded-[2rem] lg:rounded-[3rem] p-6 md:p-12 flex flex-col items-center border border-slate-100 max-w-2xl mx-auto">
+        <div className="bg-slate-50 rounded-2xl lg:rounded-2xl p-6 md:p-12 flex flex-col items-center border border-slate-100 max-w-2xl mx-auto">
           <div className="mb-8 lg:mb-12">
             <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-slate-800 flex flex-col items-center justify-center text-white shadow-xl">
               <User className="w-5 h-5 lg:w-6 lg:h-6" />

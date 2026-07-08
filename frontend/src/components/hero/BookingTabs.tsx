@@ -50,7 +50,7 @@ const BookingTabs: React.FC<BookingTabsProps> = ({ activeTab, setActiveTab }) =>
             {activeTab === tab.id && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-t-full shadow-[0_-4px_10px_rgba(249,115,22,0.3)]"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-500 rounded-t-full shadow-[0_-4px_10px_rgba(249,115,22,0.3)]"
               />
             )}
           </button>

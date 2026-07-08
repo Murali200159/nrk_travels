@@ -107,7 +107,7 @@ const OffersSection = () => {
                 <div key={idx} className="flex-[0_0_85%] sm:flex-[0_0_45%] xl:flex-[0_0_31%] min-w-0">
                   <motion.div
                     whileHover={{ y: -12 }}
-                    className="bg-emerald-50/30 dark:bg-emerald-950/20 rounded-[3rem] p-8 md:p-10 h-full flex flex-col shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group/card"
+                    className="bg-emerald-50/30 dark:bg-emerald-950/20 rounded-2xl p-8 md:p-10 h-full flex flex-col shadow-sm hover:shadow-emerald transition-all duration-500 border border-emerald-500/5 group/card"
                   >
                     {/* Top Section */}
                     <div className="flex justify-between items-start mb-10">

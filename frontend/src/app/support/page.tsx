@@ -192,7 +192,7 @@ const SupportOverview = () => {
               </SectionReveal>
 
               <SectionReveal delay={0.2}>
-                <div className="p-8 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
+                <div className="p-8 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
                   <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-6">
                     <Mail className="w-6 h-6 text-slate-400" />
                   </div>

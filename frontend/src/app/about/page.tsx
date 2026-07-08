@@ -76,7 +76,7 @@ const AboutPage = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-[2rem] bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 text-center group hover:shadow-2xl hover:shadow-emerald-500/5 transition-all"
+                className="p-8 rounded-2xl bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10 text-center group hover:shadow-2xl hover:shadow-emerald-500/5 transition-all"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   <stat.icon className="w-6 h-6" />

@@ -70,6 +70,7 @@ const Footer = () => {
                   src="/images/logo.jpg" 
                   alt="Vizag Taxi Logo" 
                   fill 
+                  sizes="(max-width: 768px) 100vw, 100px"
                   className="object-cover object-left scale-[1.35] -translate-x-[4%]" 
                 />
               </div>
@@ -114,7 +115,7 @@ const Footer = () => {
           {/* Location Map */}
           <div className="space-y-6">
             <h4 className="text-slate-900 font-black uppercase tracking-[0.3em] text-[10px]">Headquarters</h4>
-            <div className="rounded-[2rem] overflow-hidden h-40 border border-slate-200 grayscale hover:grayscale-0 transition-all duration-700 shadow-xl">
+            <div className="rounded-2xl overflow-hidden h-40 border border-slate-200 grayscale hover:grayscale-0 transition-all duration-700 shadow-xl">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3800.2!2d83.3!3d17.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQyJzAwLjAiTiA4M8KwMTgnMDAuMCJF!5e0!3m2!1sen!2sin!4v1620000000000!5m2!1sen!2sin"
                 width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"

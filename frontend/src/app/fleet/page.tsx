@@ -238,7 +238,7 @@ const FleetPage = () => {
             </SectionReveal>
 
             <SectionReveal>
-              <div className="bg-slate-900 p-12 rounded-[3rem] text-white relative overflow-hidden">
+              <div className="bg-slate-900 p-12 rounded-2xl text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
                 <h3 className="text-3xl font-black mb-6">Need a <span className="text-orange-500">Custom</span> Solution?</h3>
                 <p className="text-emerald-100/60 font-medium mb-10 leading-relaxed">Whether it's a high-profile corporate event, a wedding, or a cross-country tour, our logistics experts can curate a custom fleet for your specific needs.</p>

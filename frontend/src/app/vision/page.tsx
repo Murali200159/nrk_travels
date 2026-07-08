@@ -97,7 +97,7 @@ const VisionPage = () => {
                 { title: "Excellence", desc: "Deliver exceptional service that exceeds customer expectations.", icon: Award },
                 { title: "Expansion", desc: "Grow our services to reach more cities and communities.", icon: TrendingUp },
               ].map((goal, i) => (
-                <div key={goal.title} className="p-10 rounded-[3rem] bg-white border border-slate-100 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 group">
+                <div key={goal.title} className="p-10 rounded-2xl bg-white border border-slate-100 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 group">
                   <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
                     <goal.icon className="w-8 h-8" />
                   </div>

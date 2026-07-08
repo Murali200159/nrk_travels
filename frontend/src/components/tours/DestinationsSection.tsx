@@ -86,7 +86,7 @@ const DestinationsSection = () => {
         </div>
 
         {/* Expert Guides Badge */}
-        <div className="bg-emerald-50/50 rounded-[3rem] p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 relative overflow-hidden border border-emerald-500/10 shadow-sm">
+        <div className="bg-emerald-50/50 rounded-2xl p-8 lg:p-12 max-w-4xl mx-auto text-center space-y-4 relative overflow-hidden border border-emerald-500/10 shadow-sm">
           <div className="absolute top-0 left-0 w-32 h-32 bg-lime-400/5 blur-3xl rounded-full -translate-x-1/2 -translate-y-1/2" />
           <div className="flex items-center justify-center gap-3 text-emerald-600">
             <Shield className="w-6 h-6 fill-emerald-600/10" />

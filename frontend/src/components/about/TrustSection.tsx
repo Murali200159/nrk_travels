@@ -73,7 +73,7 @@ const TrustSection = () => {
             <motion.div
               key={idx}
               whileHover={{ y: -10 }}
-              className="bg-white rounded-[3rem] p-6 md:p-10 flex flex-col items-center text-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-slate-100"
+              className="bg-white rounded-2xl p-6 md:p-10 flex flex-col items-center text-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-slate-100"
             >
               <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-600 mb-6 shadow-sm group-hover:bg-orange-500 group-hover:text-white transition-colors">
                 <stat.icon className="w-8 h-8" />
@@ -90,7 +90,7 @@ const TrustSection = () => {
             <motion.div
               key={idx}
               whileHover={{ x: 10 }}
-              className="bg-white rounded-[3rem] p-8 md:p-10 flex flex-col lg:flex-row gap-8 items-start lg:items-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-slate-100 group"
+              className="bg-white rounded-2xl p-8 md:p-10 flex flex-col lg:flex-row gap-8 items-start lg:items-center shadow-premium hover:shadow-emerald transition-all duration-500 border border-slate-100 group"
             >
               <div className="p-5 rounded-2xl bg-emerald-50 text-emerald-600 flex-shrink-0 group-hover:bg-orange-500 group-hover:text-white transition-all duration-500">
                 <feature.icon className="w-8 h-8" />

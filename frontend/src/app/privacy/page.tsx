@@ -40,7 +40,7 @@ const PrivacyPolicy = () => {
                 </p>
               </div>
 
-              <div className="w-full lg:w-96 p-10 rounded-[3rem] bg-emerald-600 text-white shadow-2xl relative overflow-hidden group">
+              <div className="w-full lg:w-96 p-10 rounded-2xl bg-emerald-600 text-white shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-700" />
                 <Database className="w-12 h-12 mb-6 opacity-50" />
                 <h3 className="text-2xl font-black mb-4">Secure Storage</h3>
@@ -124,7 +124,7 @@ const PrivacyPolicy = () => {
                 </ul>
               </div>
 
-              <div className="p-12 rounded-[3rem] bg-slate-900 text-white relative overflow-hidden">
+              <div className="p-12 rounded-2xl bg-slate-900 text-white relative overflow-hidden">
                 <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full translate-x-1/2 translate-y-1/2" />
                 <h3 className="text-2xl font-black mb-6">Contact Privacy Team</h3>
                 <p className="text-slate-400 font-medium mb-8">Have questions about your data or want to request account deletion?</p>

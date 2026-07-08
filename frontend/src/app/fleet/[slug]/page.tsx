@@ -5,13 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ChevronLeft, 
-  Users, 
-  ShieldCheck, 
-  Settings, 
-  Fuel, 
-  CheckCircle2, 
+import {
+  ChevronLeft,
+  Users,
+  ShieldCheck,
+  Settings,
+  Fuel,
+  CheckCircle2,
   Phone,
   Car,
   ChevronRight,
@@ -115,34 +115,62 @@ const getEstimatedDistance = (from: string, to: string): number => {
   if (other.includes("rajahmundry")) return 190;
   if (other.includes("airport")) return 35;
 
-  return 145; 
+  return 145;
 };
 
 const getLocalPackagePrice = (vehicleSlug: string, localPackage: string): number => {
   const s = vehicleSlug.toLowerCase();
-  let mult = 1.0;
-  if (localPackage.includes("10 Hours")) mult = 1.2;
-  if (localPackage.includes("12 Hours")) mult = 1.4;
-
-  if (s.includes("dzire") || s.includes("glanza") || s.includes("amaze") || s === "sedan" || s === "hatchback") {
-    return Math.round(2200 * mult);
+  
+  if (s.includes("dzire") || s.includes("glanza") || s.includes("amaze") || s.includes("sedan") || s.includes("hatchback")) {
+    if (localPackage.includes("4 Hours")) return 1200;
+    if (localPackage.includes("6 Hours")) return 1800;
+    if (localPackage.includes("8 Hours")) return 2400;
+    if (localPackage.includes("10 Hours")) return 3000;
+    if (localPackage.includes("12 Hours")) return 3600;
+    return 2400;
   }
-  if (s.includes("innova") || s.includes("ertiga")) {
-    return Math.round(4000 * mult);
+  if (s.includes("ertiga")) {
+    if (localPackage.includes("4 Hours")) return 1400;
+    if (localPackage.includes("6 Hours")) return 2100;
+    if (localPackage.includes("8 Hours")) return 2800;
+    if (localPackage.includes("10 Hours")) return 3500;
+    if (localPackage.includes("12 Hours")) return 4200;
+    return 2800;
+  }
+  if (s.includes("innova")) {
+    if (localPackage.includes("12 Hours")) return 6000;
+    return 5000;
   }
   if (s.includes("12-seater") || s.includes("12seater")) {
-    return Math.round(5000 * mult);
+    if (localPackage.includes("12 Hours")) return 7800;
+    return 6500;
   }
-  if (s.includes("tempo") || s.includes("traveller") || s.includes("urbania") || s.includes("17")) {
-    return Math.round(6000 * mult);
+  if (s.includes("tempo") || s.includes("traveller") || s.includes("17")) {
+    if (localPackage.includes("12 Hours")) return 9000;
+    return 7500;
   }
-  if (s.includes("mini") || s.includes("20") || s.includes("21") || s.includes("26")) {
-    return Math.round(7000 * mult);
+  if (s.includes("urbania")) {
+    if (localPackage.includes("12 Hours")) return 9600;
+    return 8000;
   }
-  if (s.includes("27")) {
-    return Math.round(9000 * mult);
+  if (s.includes("20") || s.includes("21") || s.includes("22") || s.includes("26")) {
+    if (localPackage.includes("12 Hours")) return 10200;
+    return 8500;
   }
-  return Math.round(12000 * mult); 
+  if (s.includes("27") || s.includes("28")) {
+    if (localPackage.includes("12 Hours")) return 10800;
+    return 9000;
+  }
+  if (s.includes("36")) {
+    if (localPackage.includes("12 Hours")) return 12000;
+    return 10000;
+  }
+  if (s.includes("40") || s.includes("50")) {
+    if (localPackage.includes("12 Hours")) return 13800;
+    return 11500;
+  }
+  
+  return 5000;
 };
 
 const FleetDetailsPage = () => {
@@ -170,6 +198,16 @@ const FleetDetailsPage = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(1, diffDays);
   }, [pickupDate, returnDate]);
+
+  useEffect(() => {
+    if (vehicle && bookingMode === "day" && dayTripScope === "local") {
+      const isVehicle10HOnly = !(vehicle.slug?.includes("dzire") || vehicle.slug?.includes("glanza") || vehicle.slug?.includes("amaze") || vehicle.slug?.includes("sedan") || vehicle.slug?.includes("hatchback") || vehicle.slug?.includes("ertiga"));
+      const isPackageLessThan10H = localPackage.includes("4 Hours") || localPackage.includes("6 Hours") || localPackage.includes("8 Hours");
+      if (isVehicle10HOnly && isPackageLessThan10H) {
+        setLocalPackage("10 Hours / 100 KM");
+      }
+    }
+  }, [vehicle, bookingMode, dayTripScope, localPackage]);
 
   // Map Coordinates & Route plotting
   const [selectedFrom, setSelectedFrom] = useState({ name: "", lat: 0, lon: 0 });
@@ -458,14 +496,14 @@ const FleetDetailsPage = () => {
 
   // Find tours that include this vehicle
   const availableTours = useMemo(() => {
-    return Object.values(TOURS_DATA).filter(tour => 
+    return Object.values(TOURS_DATA).filter(tour =>
       tour.vehicleRates.some(rate => rate.model.toLowerCase().includes(vehicle?.model.toLowerCase() || ""))
     );
   }, [vehicle]);
 
   // Similar vehicles
   const similarVehicles = useMemo(() => {
-    return Object.values(FLEET_DATA).filter(v => 
+    return Object.values(FLEET_DATA).filter(v =>
       v.slug !== slug && (v.type === vehicle?.type || v.pax === vehicle?.pax)
     ).slice(0, 3);
   }, [vehicle, slug]);
@@ -571,7 +609,7 @@ const FleetDetailsPage = () => {
   // Live Fare Calculator
   const sidebarFare = (() => {
     const terms = getVehicleTerms(vehicle.slug, vehicle.model, vehicle.pax);
-    
+
     if (bookingMode === "day" && dayTripScope === "local") {
       const basePrice = getLocalPackagePrice(vehicle.slug || "", localPackage);
       const bhatta = terms.driverBhatta;
@@ -599,9 +637,9 @@ const FleetDetailsPage = () => {
         price: total,
         distance: distance,
         time: timeStr,
-        breakdown: { 
-          base: basePrice, 
-          bhatta: bhatta, 
+        breakdown: {
+          base: basePrice,
+          bhatta: bhatta,
           info: `Outstation Daily rate for ${calculatedDays} days (${Math.max(distance, 300 * calculatedDays)} KM package min billing).`
         }
       };
@@ -609,7 +647,7 @@ const FleetDetailsPage = () => {
 
     // Book for KM Mode - Pure distance-based billing + driver bhatta per day, no daily minimum 300 KM billing per day
     const distance = osrmDistance !== null ? osrmDistance : getEstimatedDistance(pickupLocation, dropLocation);
-    
+
     if (tripType === "one-way") {
       const oneWayRate = getOneWayRate(vehicle.slug, vehicle.model);
       const basePrice = distance * oneWayRate;
@@ -624,9 +662,9 @@ const FleetDetailsPage = () => {
         price: total,
         distance: distance,
         time: timeStr,
-        breakdown: { 
-          base: basePrice, 
-          bhatta: 0, 
+        breakdown: {
+          base: basePrice,
+          bhatta: 0,
           info: `One Way rate (₹${oneWayRate}/KM) + ₹1,000 Premium Charge.`
         }
       };
@@ -636,7 +674,7 @@ const FleetDetailsPage = () => {
     const totalKm = distance * multiplier;
     const chargeKm = totalKm <= 250 ? 250 : totalKm;
     const basePrice = Math.ceil(chargeKm * Number(vehicle.pricePerKm));
-    const bhatta = 300 * calculatedDays; 
+    const bhatta = 300 * calculatedDays;
     const total = basePrice + bhatta;
     const timeStr = osrmDuration !== null ? osrmDuration : (() => {
       const hours = Math.floor((distance * 1.5) / 60) + 1;
@@ -648,9 +686,9 @@ const FleetDetailsPage = () => {
       price: total,
       distance: totalKm,
       time: timeStr,
-      breakdown: { 
-        base: basePrice, 
-        bhatta: bhatta, 
+      breakdown: {
+        base: basePrice,
+        bhatta: bhatta,
         info: totalKm < chargeKm
           ? `KM Outstation package rate (₹${vehicle.pricePerKm}/KM). Min ${chargeKm} KM billing applied.`
           : `KM Outstation package rate (₹${vehicle.pricePerKm}/KM).`
@@ -727,7 +765,7 @@ const FleetDetailsPage = () => {
 
         {/* Interactive Forms */}
         <div className="space-y-4">
-          
+
           {/* Pickup Input with autocomplete */}
           <div className="relative" ref={fromContainerRef}>
             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Pickup Location</label>
@@ -845,7 +883,13 @@ const FleetDetailsPage = () => {
                     onChange={(e) => setLocalPackage(e.target.value)}
                     className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-[10px] font-black text-slate-900 focus:outline-none cursor-pointer appearance-none"
                   >
-                    <option>8 Hours / 80 KM</option>
+                    {!(vehicle?.slug?.includes("innova") || vehicle?.slug?.includes("12-seater") || vehicle?.slug?.includes("12seater") || vehicle?.slug?.includes("tempo") || vehicle?.slug?.includes("traveller") || vehicle?.slug?.includes("17") || vehicle?.slug?.includes("urbania") || vehicle?.slug?.includes("20") || vehicle?.slug?.includes("21") || vehicle?.slug?.includes("22") || vehicle?.slug?.includes("26") || vehicle?.slug?.includes("27") || vehicle?.slug?.includes("28") || vehicle?.slug?.includes("36") || vehicle?.slug?.includes("40") || vehicle?.slug?.includes("50")) && (
+                      <>
+                        <option>4 Hours / 40 KM</option>
+                        <option>6 Hours / 60 KM</option>
+                        <option>8 Hours / 80 KM</option>
+                      </>
+                    )}
                     <option>10 Hours / 100 KM</option>
                     <option>12 Hours / 120 KM</option>
                   </select>
@@ -928,7 +972,7 @@ const FleetDetailsPage = () => {
         {pickupLocation && (bookingMode === "day" && dayTripScope === "local" ? true : !!dropLocation) && (
           <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-500/10 space-y-3">
             <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Live Price Calculation</p>
-            
+
             <div className="flex justify-between items-baseline border-b border-emerald-500/10 pb-2">
               <span className="text-[9px] font-black text-slate-500 uppercase">Estimated Distance</span>
               <span className="text-sm font-black text-slate-900">{sidebarFare.distance} KM</span>
@@ -943,14 +987,14 @@ const FleetDetailsPage = () => {
               <span className="text-[9px] font-black text-slate-500 uppercase">Base Price</span>
               <span className="text-sm font-black text-slate-900">₹{sidebarFare.breakdown.base.toLocaleString()}</span>
             </div>
-            
+
             {sidebarFare.breakdown.bhatta > 0 && (
               <div className="flex justify-between items-baseline border-b border-emerald-500/10 pb-2">
                 <span className="text-[9px] font-black text-slate-500 uppercase">Driver Bhatta</span>
                 <span className="text-sm font-black text-slate-900">₹{sidebarFare.breakdown.bhatta.toLocaleString()}</span>
               </div>
             )}
-            
+
             <div className="flex justify-between items-baseline border-b border-emerald-500/10 pb-2">
               <span className="text-[9px] font-black text-slate-500 uppercase">GST (5%)</span>
               <span className="text-sm font-black text-slate-900">₹{gstAmount.toLocaleString('en-IN')}</span>
@@ -969,13 +1013,13 @@ const FleetDetailsPage = () => {
 
         {/* Action Buttons */}
         <div className="pt-4 border-t border-slate-100">
-          <button 
+          <button
             onClick={handleBookNow}
             disabled={!isFormValid()}
             className={cn(
               "w-full py-4 rounded-xl font-black text-[10px] transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 uppercase tracking-[0.2em] border-none",
-              isFormValid() 
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/10" 
+              isFormValid()
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/10"
                 : "bg-slate-100 text-slate-400 cursor-not-allowed"
             )}
           >
@@ -1002,7 +1046,7 @@ const FleetDetailsPage = () => {
       <section className="py-8 lg:py-12 px-6 lg:px-12">
         <div className="max-w-[100%] mx-auto">
           <div className="flex flex-col lg:flex-row gap-10">
-            
+
             {/* Main Content (Left) */}
             <div className="lg:w-3/4 space-y-10">
               {/* Vehicle Main Card */}
@@ -1038,11 +1082,11 @@ const FleetDetailsPage = () => {
 
                 {/* Fixed Squished Mobile Image Container */}
                 <div className="relative h-48 sm:h-64 md:h-80 lg:h-[400px] w-full rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100 group">
-                  <Image 
-                    src={vehicle.images[0]} 
-                    alt={vehicle.model} 
-                    fill 
-                    className="object-contain p-4 md:p-8 group-hover:scale-105 transition-transform duration-1000" 
+                  <Image
+                    src={vehicle.images[0]}
+                    alt={vehicle.model}
+                    fill
+                    className="object-contain p-4 md:p-8 group-hover:scale-105 transition-transform duration-1000"
                   />
                 </div>
               </div>
@@ -1112,7 +1156,7 @@ const FleetDetailsPage = () => {
                 <div className="p-10 lg:p-12">
                   <AnimatePresence mode="wait">
                     {activeTab === "overview" && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                       >
@@ -1122,7 +1166,7 @@ const FleetDetailsPage = () => {
                       </motion.div>
                     )}
                     {activeTab === "inclusions" && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                         className="grid md:grid-cols-2 gap-10"
                       >
@@ -1153,7 +1197,7 @@ const FleetDetailsPage = () => {
                       </motion.div>
                     )}
                     {activeTab === "features" && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                         className="grid md:grid-cols-3 gap-6"
                       >
@@ -1181,17 +1225,17 @@ const FleetDetailsPage = () => {
                   {availableTours.map(tour => (
                     <div key={tour.slug} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-600/5 transition-all duration-500 group flex flex-col">
                       <div className="relative aspect-[16/10] overflow-hidden">
-                        <Image 
-                          src={tour.images[0]} 
-                          alt={tour.title} 
-                          fill 
-                          className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                        <Image
+                          src={tour.images[0]}
+                          alt={tour.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-1000"
                         />
                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-xl text-[10px] font-black uppercase text-emerald-600 shadow-xl border border-white/20">
                           {tour.duration}
                         </div>
                       </div>
-                      
+
                       <div className="p-8 flex flex-col flex-1 space-y-4">
                         <div className="space-y-2">
                           <h4 className="text-lg font-black text-slate-900 tracking-tight uppercase group-hover:text-emerald-600 transition-colors line-clamp-1">{tour.title}</h4>
@@ -1210,7 +1254,7 @@ const FleetDetailsPage = () => {
                             <p className="text-[10px] font-black text-slate-900 italic leading-none">₹{tour.vehicleRates.find(r => r.model.toLowerCase().includes(vehicle.model.toLowerCase()))?.price || tour.basePrice}</p>
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Package</p>
                           </div>
-                          <Link 
+                          <Link
                             href={`/tours/${tour.slug}`}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/10 active:scale-95 flex items-center gap-2"
                           >
@@ -1237,14 +1281,14 @@ const FleetDetailsPage = () => {
                       <div key={v.slug} className="group cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 p-2 relative overflow-hidden flex-shrink-0">
-                            <Image src={v.images[0]} alt={v.model} fill className="object-contain p-1 group-hover:scale-110 transition-transform" />
+                            <Image src={v.images[0]} alt={v.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain p-1 group-hover:scale-110 transition-transform" />
                           </div>
                           <div className="flex-1 space-y-2">
                             <div className="flex justify-between items-start">
                               <h4 className="text-[11px] font-black text-slate-900 uppercase group-hover:text-emerald-600 transition-colors">{v.model}</h4>
                               <span className="text-[10px] font-black text-emerald-600 italic leading-none">₹{v.pricePerKm}/km</span>
                             </div>
-                            <Link 
+                            <Link
                               href={`/fleet/${v.slug}`}
                               className="inline-block text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4"
                             >
@@ -1272,9 +1316,9 @@ const FleetDetailsPage = () => {
                       +91 9111989222
                     </a>
                   </div>
-                  <a 
-                    href="https://wa.me/919111989222" 
-                    target="_blank" 
+                  <a
+                    href="https://wa.me/919111989222"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                   >
@@ -1283,7 +1327,7 @@ const FleetDetailsPage = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Mobile Footer Items (Shown under left content on mobile) */}
             <div className="w-full lg:hidden space-y-8">
               {/* Similar Vehicles */}
@@ -1294,14 +1338,14 @@ const FleetDetailsPage = () => {
                     <div key={v.slug} className="group cursor-pointer">
                       <div className="flex items-center gap-4">
                         <div className="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 p-2 relative overflow-hidden flex-shrink-0">
-                          <Image src={v.images[0]} alt={v.model} fill className="object-contain p-1 group-hover:scale-110 transition-transform" />
+                          <Image src={v.images[0]} alt={v.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain p-1 group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex-1 space-y-2">
                           <div className="flex justify-between items-start">
                             <h4 className="text-[11px] font-black text-slate-900 uppercase group-hover:text-emerald-600 transition-colors">{v.model}</h4>
                             <span className="text-[10px] font-black text-emerald-600 italic leading-none">₹{v.pricePerKm}/km</span>
                           </div>
-                          <Link 
+                          <Link
                             href={`/fleet/${v.slug}`}
                             className="inline-block text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4"
                           >
@@ -1329,9 +1373,9 @@ const FleetDetailsPage = () => {
                     +91 9111989222
                   </a>
                 </div>
-                <a 
-                  href="https://wa.me/919111989222" 
-                  target="_blank" 
+                <a
+                  href="https://wa.me/919111989222"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
@@ -1344,8 +1388,8 @@ const FleetDetailsPage = () => {
         </div>
       </section>
 
-      <BookingFlowModal 
-        isOpen={isBookingModalOpen} 
+      <BookingFlowModal
+        isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         vehicle={{
           slug: vehicle.slug,

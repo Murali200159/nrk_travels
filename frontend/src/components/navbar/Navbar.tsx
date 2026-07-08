@@ -68,7 +68,7 @@ const Navbar = () => {
         )}
       >
         <div className={cn(
-          "max-w-[100%] mx-auto flex items-center justify-between px-6 py-2.5 rounded-[2rem] transition-all duration-700 ease-in-out",
+          "max-w-[100%] mx-auto flex items-center justify-between px-6 py-2.5 rounded-2xl transition-all duration-700 ease-in-out",
           isScrolled
             ? "bg-white/80 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white/50"
             : "bg-transparent"
@@ -82,6 +82,7 @@ const Navbar = () => {
                     src="/images/logo.jpg" 
                     alt="Vizag Taxi Logo" 
                     fill 
+                    sizes="(max-width: 768px) 100vw, 100px"
                     className="object-cover object-left scale-[1.35] -translate-x-[4%] transition-transform duration-700" 
                     priority
                   />

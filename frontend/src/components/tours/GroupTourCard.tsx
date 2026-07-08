@@ -25,6 +25,7 @@ const GroupTourCard: React.FC<GroupTourCardProps> = ({ slug, title, date, price,
           src={image}
           alt={title}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-110 transition-transform duration-1000 group-hover:brightness-110"
         />
         <div className="absolute top-4 right-4 bg-emerald-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-2xl uppercase tracking-[0.2em] backdrop-blur-md bg-emerald-600/90">

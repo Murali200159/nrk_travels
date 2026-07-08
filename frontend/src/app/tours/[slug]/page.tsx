@@ -273,14 +273,14 @@ const TourDetailsPage = () => {
                   {/* Gallery Grid */}
                   <div className="grid grid-cols-12 gap-3 aspect-[16/9] lg:aspect-[21/9]">
                     <div className="col-span-8 relative rounded-2xl overflow-hidden border border-slate-200">
-                      <Image src={tour.images[0]} alt={tour.title} fill className="object-cover" />
+                      <Image src={tour.images[0]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                     </div>
                     <div className="col-span-4 flex flex-col gap-3">
                       <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
-                        <Image src={tour.images[1] || tour.images[0]} alt={tour.title} fill className="object-cover" />
+                        <Image src={tour.images[1] || tour.images[0]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                       </div>
                       <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
-                        <Image src={tour.images[2] || tour.images[0]} alt={tour.title} fill className="object-cover" />
+                        <Image src={tour.images[2] || tour.images[0]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                       </div>
                     </div>
                   </div>
@@ -420,7 +420,7 @@ const TourDetailsPage = () => {
                   key="success-card"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white rounded-[2rem] p-8 lg:p-12 border border-slate-100 shadow-xl text-center space-y-6"
+                  className="bg-white rounded-2xl p-8 lg:p-12 border border-slate-100 shadow-xl text-center space-y-6"
                 >
                   <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mx-auto">
                     <Check className="w-10 h-10" />
@@ -771,7 +771,7 @@ const TourDetailsPage = () => {
                         >
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-slate-100 relative">
-                              <Image src={vehicle.image} alt={vehicle.model} fill className="object-cover" />
+                              <Image src={vehicle.image} alt={vehicle.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                             </div>
                             <div className="text-left">
                               <p className="text-sm font-black text-slate-900">{vehicle.model}</p>
@@ -804,7 +804,7 @@ const TourDetailsPage = () => {
 
                       <div className="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-xl bg-white border border-emerald-100 overflow-hidden relative">
-                          <Image src={selectedVehicle?.image || ""} alt={selectedVehicle?.model || ""} fill className="object-cover" />
+                          <Image src={selectedVehicle?.image || ""} alt={selectedVehicle?.model || ""} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-black text-slate-900">{selectedVehicle?.model}</p>

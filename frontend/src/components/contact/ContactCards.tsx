@@ -65,7 +65,7 @@ const ContactCards = () => {
           viewport={{ once: true }}
           transition={{ delay: i * 0.1 }}
           className={cn(
-            "group relative p-8 rounded-[2rem] transition-all duration-500",
+            "group relative p-8 rounded-2xl transition-all duration-500",
             "bg-white dark:bg-emerald-950/20 border border-slate-100 dark:border-emerald-500/10",
             "hover:shadow-[0_30px_60px_-15px_rgba(5,150,105,0.15)] dark:hover:shadow-[0_30px_60px_-15px_rgba(5,150,105,0.3)]",
             "hover:-translate-y-2 overflow-hidden"

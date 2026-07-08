@@ -366,7 +366,7 @@ const GroupTourDetailsPage = () => {
     <main className="min-h-screen bg-slate-50/50 pt-28 lg:pt-32">
       {/* Search Route Bar */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 mb-8">
-        <div className="bg-white border border-slate-100 rounded-[2rem] px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <Link href="/" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors">
               <ArrowLeft className="w-5 h-5" />
@@ -393,19 +393,19 @@ const GroupTourDetailsPage = () => {
 
                 {/* Gallery Grid */}
                 <div className="grid grid-cols-12 gap-3 aspect-[16/9] lg:aspect-[21/10]">
-                  <div className="col-span-8 relative rounded-[2rem] overflow-hidden border border-slate-200">
-                    <Image src={tour.images[0]} alt={tour.title} fill className="object-cover" />
+                  <div className="col-span-8 relative rounded-2xl overflow-hidden border border-slate-200">
+                    <Image src={tour.images[0]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                     <div className="absolute top-6 left-6 bg-emerald-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-2xl uppercase tracking-widest flex items-center gap-2 backdrop-blur-md bg-emerald-600/90">
                       <Camera className="w-3.5 h-3.5" />
                       1 / {tour.images.length}
                     </div>
                   </div>
                   <div className="col-span-4 flex flex-col gap-3">
-                    <div className="flex-1 relative rounded-[2rem] overflow-hidden border border-slate-200">
-                      <Image src={tour.images[1]} alt={tour.title} fill className="object-cover" />
+                    <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
+                      <Image src={tour.images[1]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                     </div>
-                    <div className="flex-1 relative rounded-[2rem] overflow-hidden border border-slate-200">
-                      <Image src={tour.images[2]} alt={tour.title} fill className="object-cover" />
+                    <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200">
+                      <Image src={tour.images[2]} alt={tour.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white cursor-pointer hover:bg-slate-900/50 transition-all">
                         <Camera className="w-6 h-6 mb-2" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">View All Images</span>
@@ -425,7 +425,7 @@ const GroupTourDetailsPage = () => {
                   </div>
 
                   {/* Quick Info Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <div className="space-y-1">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5 text-emerald-500" /> Pickup Point
@@ -455,16 +455,16 @@ const GroupTourDetailsPage = () => {
 
                 {/* Map Preview */}
                 <div className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm p-3 relative z-10">
-                  <div className="relative h-[300px] md:h-[400px] rounded-[2rem] bg-slate-100 overflow-hidden group">
+                  <div className="relative h-[300px] md:h-[400px] rounded-2xl bg-slate-100 overflow-hidden group">
                     <iframe
                       ref={mapRef}
                       srcDoc={mapSrcDoc}
-                      className="w-full h-full border-none rounded-[2rem]"
+                      className="w-full h-full border-none rounded-2xl"
                       title="Route Map"
                     />
                     
                     {isLoadingRoute && (
-                      <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] flex items-center justify-center z-20 transition-all rounded-[2rem]">
+                      <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] flex items-center justify-center z-20 transition-all rounded-2xl">
                         <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
                           <div className="w-5 h-5 border-2 border-emerald-600/30 border-t-emerald-600 rounded-full animate-spin" />
                           <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Calculating Route...</span>
@@ -937,7 +937,7 @@ const GroupTourDetailsPage = () => {
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Female only</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded bg-blue-600" />
+                          <div className="w-4 h-4 rounded bg-emerald-600" />
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -948,7 +948,7 @@ const GroupTourDetailsPage = () => {
                     </div>
 
                     {/* Seat Grid Layout */}
-                    <div className="bg-slate-50 rounded-[3rem] p-12 flex flex-col items-center border border-slate-100 max-w-2xl mx-auto">
+                    <div className="bg-slate-50 rounded-2xl p-12 flex flex-col items-center border border-slate-100 max-w-2xl mx-auto">
                       <div className="mb-12">
                         <div className="w-16 h-16 rounded-2xl bg-slate-800 flex flex-col items-center justify-center text-white shadow-xl">
                           <User className="w-6 h-6" />
@@ -1322,8 +1322,8 @@ const GroupTourDetailsPage = () => {
 
                   <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm">
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-                        <CreditCard className="w-6 h-6 text-blue-600" />
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-emerald-600" />
                       </div>
                       <div>
                         <h3 className="text-xl font-black text-slate-900 uppercase">Contact Details</h3>
@@ -1357,8 +1357,8 @@ const GroupTourDetailsPage = () => {
 
                   <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-sm">
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-amber-600" />
+                      <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-orange-600" />
                       </div>
                       <div>
                         <h3 className="text-xl font-black text-slate-900 uppercase">Terms & Conditions</h3>
@@ -1503,7 +1503,7 @@ const SeatButton: React.FC<SeatButtonProps> = ({ id, status, onClick, price, gen
       status === "selected"
         ? gender === "female"
           ? "bg-[#e11d48] border-[#be123c] text-white shadow-lg shadow-rose-600/20"
-          : "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20"
+          : "bg-emerald-600 border-emerald-700 text-white shadow-lg shadow-emerald-600/20"
         : status === "booked"
           ? "bg-[#94a3b8] border-[#64748b] text-white cursor-not-allowed opacity-60"
           : status === "reserved"
@@ -1517,7 +1517,7 @@ const SeatButton: React.FC<SeatButtonProps> = ({ id, status, onClick, price, gen
       <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
         <div className={cn(
           "w-2 h-2 rounded-full",
-          gender === "female" ? "bg-rose-600" : "bg-blue-600"
+          gender === "female" ? "bg-rose-600" : "bg-emerald-600"
         )} />
       </div>
     )}

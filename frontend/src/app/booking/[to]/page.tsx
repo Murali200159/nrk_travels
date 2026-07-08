@@ -34,6 +34,61 @@ import {
 } from "lucide-react";
 import { FLEET_DATA } from "@/lib/fleet";
 import { DESTINATIONS } from "@/lib/destinations";
+
+const getLocalPackagePrice = (vehicleSlug: string, localPackage: string): number => {
+  const s = vehicleSlug.toLowerCase();
+  
+  if (s.includes("dzire") || s.includes("glanza") || s.includes("amaze") || s.includes("sedan") || s.includes("hatchback")) {
+    if (localPackage.includes("4 Hours")) return 1200;
+    if (localPackage.includes("6 Hours")) return 1800;
+    if (localPackage.includes("8 Hours")) return 2400;
+    if (localPackage.includes("10 Hours")) return 3000;
+    if (localPackage.includes("12 Hours")) return 3600;
+    return 2400;
+  }
+  if (s.includes("ertiga")) {
+    if (localPackage.includes("4 Hours")) return 1400;
+    if (localPackage.includes("6 Hours")) return 2100;
+    if (localPackage.includes("8 Hours")) return 2800;
+    if (localPackage.includes("10 Hours")) return 3500;
+    if (localPackage.includes("12 Hours")) return 4200;
+    return 2800;
+  }
+  if (s.includes("innova")) {
+    if (localPackage.includes("12 Hours")) return 6000;
+    return 5000;
+  }
+  if (s.includes("12-seater") || s.includes("12seater")) {
+    if (localPackage.includes("12 Hours")) return 7800;
+    return 6500;
+  }
+  if (s.includes("tempo") || s.includes("traveller") || s.includes("17")) {
+    if (localPackage.includes("12 Hours")) return 9000;
+    return 7500;
+  }
+  if (s.includes("urbania")) {
+    if (localPackage.includes("12 Hours")) return 9600;
+    return 8000;
+  }
+  if (s.includes("20") || s.includes("21") || s.includes("22") || s.includes("26")) {
+    if (localPackage.includes("12 Hours")) return 10200;
+    return 8500;
+  }
+  if (s.includes("27") || s.includes("28")) {
+    if (localPackage.includes("12 Hours")) return 10800;
+    return 9000;
+  }
+  if (s.includes("36")) {
+    if (localPackage.includes("12 Hours")) return 12000;
+    return 10000;
+  }
+  if (s.includes("40") || s.includes("50")) {
+    if (localPackage.includes("12 Hours")) return 13800;
+    return 11500;
+  }
+  
+  return 5000;
+};
 import DestinationsSection from "@/components/tours/DestinationsSection";
 import { cn } from "@/lib/utils";
 import { getFormattedVehicleTermsList, getVehicleTerms, getOneWayRate } from "@/lib/rates";
@@ -206,6 +261,9 @@ const BookingPageContent = () => {
       setIsLeadSubmitted(submitted);
     }
   }, []);
+
+  const isLocalMode = normalizedToSlug === "local-city-taxi";
+  const [localPackage, setLocalPackage] = useState(() => searchParams.get("package") || "4 Hours / 40 KM");
 
   const [airportTrip, setAirportTrip] = useState<"from-airport" | "to-airport">("from-airport");
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
@@ -757,6 +815,21 @@ const BookingPageContent = () => {
   const calculateFare = (pricePerKm: number, slug: string, modelName?: string, pax?: string | number) => {
     const distance = calculatedDistance || destination.distanceKm;
 
+    if (isLocalMode) {
+      const basePrice = getLocalPackagePrice(slug, localPackage);
+      const terms = getVehicleTerms(slug, pax ? String(pax) : undefined);
+      const bhatta = terms.driverBhatta;
+      const packageKm = localPackage.includes("40 KM") ? 40 : (localPackage.includes("60 KM") ? 60 : (localPackage.includes("80 KM") ? 80 : (localPackage.includes("100 KM") ? 100 : 120)));
+      return {
+        total: basePrice + bhatta,
+        totalKm: packageKm,
+        chargeKm: packageKm,
+        bhatta: bhatta,
+        base: basePrice,
+        days: 1
+      };
+    }
+
     if (tripType === "one-way") {
       const oneWayRate = getOneWayRate(slug, modelName);
       const basePrice = Math.ceil(distance * oneWayRate);
@@ -804,7 +877,7 @@ const BookingPageContent = () => {
   const totalAmount = useMemo(() => {
     if (!selectedVehicle) return 0;
     return calculateFare(Number(selectedVehicle.pricePerKm), selectedVehicle.slug, selectedVehicle.model, selectedVehicle.pax).total;
-  }, [selectedVehicle, calculatedDistance, tripType, pickupDate, returnDate]);
+  }, [selectedVehicle, calculatedDistance, tripType, pickupDate, returnDate, localPackage]);
 
   const totalGst = useMemo(() => Math.ceil(totalAmount * 0.05), [totalAmount]);
   const totalWithGst = useMemo(() => totalAmount + totalGst, [totalAmount, totalGst]);
@@ -994,13 +1067,33 @@ const BookingPageContent = () => {
             </div>
           </div>
 
-          {/* Drop Location */}
+          {/* Drop Location or Package */}
           <div className="lg:col-span-3 space-y-3 relative">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Drop Location</label>
-            <div className="relative group">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
-              <input
-                type="text"
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
+              {isLocalMode ? "Package" : "Drop Location"}
+            </label>
+            {isLocalMode ? (
+              <div className="relative group">
+                <select
+                  value={localPackage}
+                  onChange={(e) => setLocalPackage(e.target.value)}
+                  className="w-full h-16 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-black focus:ring-2 focus:ring-emerald-500 transition-all text-slate-900 appearance-none cursor-pointer"
+                >
+                  <option>4 Hours / 40 KM</option>
+                  <option>6 Hours / 60 KM</option>
+                  <option>8 Hours / 80 KM</option>
+                  <option>10 Hours / 100 KM</option>
+                  <option>12 Hours / 120 KM</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  &#9662;
+                </div>
+              </div>
+            ) : (
+              <div className="relative group">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
+                <input
+                  type="text"
                 placeholder="Enter area, city or pincode"
                 value={toSearch}
                 onFocus={() => setShowToSuggestions(true)}
@@ -1065,9 +1158,11 @@ const BookingPageContent = () => {
                 )}
               </AnimatePresence>
             </div>
+            )}
           </div>
 
           {/* Trip Direction */}
+          {!isLocalMode && (
           <div className="lg:col-span-3 space-y-3">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Trip Direction</label>
             <div className="flex bg-slate-50 border border-slate-250 p-1 rounded-2xl w-full relative h-16 items-center">
@@ -1111,6 +1206,7 @@ const BookingPageContent = () => {
               </button>
             </div>
           </div>
+          )}
 
           {/* Departure Date */}
           <div className="lg:col-span-3 space-y-3 relative">
@@ -1375,14 +1471,14 @@ const BookingPageContent = () => {
             </div>
             <div className="grid grid-cols-12 gap-4 h-[500px]">
               <div className="col-span-8 relative rounded-[2.5rem] overflow-hidden group">
-                <Image src={destination.images[0] || "https://images.unsplash.com/photo-1590490360182-c33d57733427"} alt={destination.name} fill className="object-cover group-hover:scale-105 transition-all duration-700" />
+                <Image src={destination.images[0] || "https://images.unsplash.com/photo-1590490360182-c33d57733427"} alt={destination.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-all duration-700" />
               </div>
               <div className="col-span-4 flex flex-col gap-4">
                 <div className="flex-1 relative rounded-[2.5rem] overflow-hidden bg-slate-100 group">
-                  {destination.images[1] && <Image src={destination.images[1]} alt={destination.name} fill className="object-cover group-hover:scale-105 transition-all duration-700" />}
+                  {destination.images[1] && <Image src={destination.images[1]} alt={destination.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-all duration-700" />}
                 </div>
                 <div className="flex-1 relative rounded-[2.5rem] overflow-hidden bg-slate-100 group">
-                  {destination.images[2] ? <Image src={destination.images[2]} alt={destination.name} fill className="object-cover group-hover:scale-105 transition-all duration-700" /> : <div className="absolute inset-0 flex items-center justify-center text-slate-300 font-black uppercase text-[10px]">Vizag Travels</div>}
+                  {destination.images[2] ? <Image src={destination.images[2]} alt={destination.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-all duration-700" /> : <div className="absolute inset-0 flex items-center justify-center text-slate-300 font-black uppercase text-[10px]">Vizag Travels</div>}
                   <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white cursor-pointer hover:bg-slate-900/60 transition-all">
                     <Camera className="w-6 h-6 mb-2" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Gallery</span>
@@ -1499,7 +1595,7 @@ const BookingPageContent = () => {
                   <div key={vehicle.slug} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden group hover:border-emerald-500/30 transition-all duration-500">
                     <div className="p-8 flex flex-col md:flex-row items-center gap-10">
                       <div className="w-48 h-32 relative bg-slate-50 rounded-3xl p-4 flex items-center justify-center">
-                        <Image src={vehicle.images[0]} alt={vehicle.model} fill className="object-contain p-4 group-hover:scale-110 transition-all duration-700" />
+                        <Image src={vehicle.images[0]} alt={vehicle.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain p-4 group-hover:scale-110 transition-all duration-700" />
                       </div>
 
                       <div className="flex-1 space-y-4 text-center md:text-left">
@@ -1537,16 +1633,41 @@ const BookingPageContent = () => {
                           <p className="text-[10px] font-black text-slate-500 mt-1">
                             Up to {vehicle.pax} passengers
                           </p>
-                          <p className={cn("text-[9px] font-bold text-slate-400 mt-0.5")}>
-                            {fares.totalKm} KM @ ₹{tripType === "one-way" ? getOneWayRate(vehicle.slug, vehicle.model) : vehicle.pricePerKm}/KM
-                          </p>
+                          {!isLocalMode && (
+                            <p className={cn("text-[9px] font-bold text-slate-400 mt-0.5")}>
+                              {fares.totalKm} KM @ ₹{tripType === "one-way" ? getOneWayRate(vehicle.slug, vehicle.model) : vehicle.pricePerKm}/KM
+                            </p>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handleBookNow(vehicle)}
-                          className="px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20"
-                        >
-                          Book Now
-                        </button>
+                        {(() => {
+                          const isVehicle10HOnly = !(vehicle.slug.includes("dzire") || vehicle.slug.includes("glanza") || vehicle.slug.includes("amaze") || vehicle.slug.includes("sedan") || vehicle.slug.includes("hatchback") || vehicle.slug.includes("ertiga"));
+                          const isPackageLessThan10H = localPackage.includes("4 Hours") || localPackage.includes("6 Hours") || localPackage.includes("8 Hours");
+                          const isInvalidLocalBooking = isLocalMode && isVehicle10HOnly && isPackageLessThan10H;
+
+                          return (
+                            <div className="flex flex-col items-end gap-2">
+                              <button
+                                onClick={() => {
+                                  if (!isInvalidLocalBooking) handleBookNow(vehicle);
+                                }}
+                                disabled={isInvalidLocalBooking}
+                                className={cn(
+                                  "px-10 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl",
+                                  isInvalidLocalBooking 
+                                    ? "bg-slate-300 cursor-not-allowed shadow-none" 
+                                    : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+                                )}
+                              >
+                                Book Now
+                              </button>
+                              {isInvalidLocalBooking && (
+                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+                                  Starting time is 10 Hrs for this vehicle
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1962,7 +2083,7 @@ const BookingPageContent = () => {
               <button key={vehicle.slug} onClick={() => handleBookNow(vehicle)} className={cn("w-full p-6 rounded-[2rem] border-2 transition-all flex items-center justify-between group", selectedVehicle?.slug === vehicle.slug ? "border-emerald-500 bg-emerald-50/50" : "border-slate-100 hover:border-emerald-500/30")}>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-12 relative bg-slate-50 rounded-xl overflow-hidden">
-                    <Image src={vehicle.images[0]} alt={vehicle.model} fill className="object-contain p-2" />
+                    <Image src={vehicle.images[0]} alt={vehicle.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain p-2" />
                   </div>
                   <div className="text-left">
                     <p className="text-[13px] font-black text-slate-900 uppercase">{vehicle.model}</p>
@@ -2014,9 +2135,11 @@ const BookingPageContent = () => {
             <div className="flex-1 min-w-0">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trip Type</p>
               <p className="text-sm font-black text-slate-900 uppercase mt-0.5">
-                {isAirportMode
-                  ? `Airport Transfer (${airportTrip === 'from-airport' ? 'From Airport' : 'To Airport'})`
-                  : destination.type === "tour" ? "Tour" : `Outstation (${tripType === 'one-way' ? 'One Way' : 'Round Trip'})`
+                {isLocalMode
+                  ? "Hourly Rentals"
+                  : isAirportMode
+                    ? `Airport Transfer (${airportTrip === 'from-airport' ? 'From Airport' : 'To Airport'})`
+                    : destination.type === "tour" ? "Tour" : `Outstation (${tripType === 'one-way' ? 'One Way' : 'Round Trip'})`
                 }
               </p>
             </div>
@@ -2028,33 +2151,64 @@ const BookingPageContent = () => {
               <MapPin className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pickup</p>
-              <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{selectedFrom.name}</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pick-up</p>
+              <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{fromSearch || "Visakhapatnam"}</p>
             </div>
             <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
           </div>
 
-          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-              <MapPin className="w-5 h-5" />
+          {isLocalMode ? (
+            <div className="flex items-start gap-4 group">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Package</p>
+                <div className="relative inline-block mt-0.5 w-full">
+                  <select
+                    value={localPackage}
+                    onChange={(e) => {
+                      setLocalPackage(e.target.value);
+                    }}
+                    className="w-full bg-transparent text-sm font-black text-slate-900 uppercase outline-none cursor-pointer hover:text-emerald-600 transition-colors appearance-none pr-6"
+                  >
+                    <option>4 Hours / 40 KM</option>
+                    <option>6 Hours / 60 KM</option>
+                    <option>8 Hours / 80 KM</option>
+                    <option>10 Hours / 100 KM</option>
+                    <option>12 Hours / 120 KM</option>
+                  </select>
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    &#9662;
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Drop-off</p>
-              <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{selectedTo.name}</p>
-            </div>
-            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
-          </div>
+          ) : (
+            <>
+              <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Drop-off</p>
+                  <p className="text-sm font-black text-slate-900 uppercase mt-0.5 line-clamp-1">{selectedTo.name}</p>
+                </div>
+                <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+              </div>
 
-          <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-              <Map className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Distance</p>
-              <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{formattedDistance} KM</p>
-            </div>
-            <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
-          </div>
+              <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Map className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Distance</p>
+                  <p className="text-sm font-black text-slate-900 uppercase mt-0.5">{formattedDistance} KM</p>
+                </div>
+                <Edit2 className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+              </div>
+            </>
+          )}
 
           <div className="flex items-start gap-4 group cursor-pointer" onClick={() => setIsEditingDates(true)}>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
@@ -2083,7 +2237,7 @@ const BookingPageContent = () => {
           {selectedVehicle && (
             <div className="p-5 rounded-[2rem] border border-emerald-500 bg-emerald-50/30 flex items-center gap-5 relative">
               <div className="w-20 h-14 relative bg-white rounded-2xl p-2 border border-emerald-100 shadow-sm shrink-0">
-                <Image src={selectedVehicle.images[0]} alt={selectedVehicle.model} fill className="object-contain" />
+                <Image src={selectedVehicle.images[0]} alt={selectedVehicle.model} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-black text-slate-900 uppercase truncate">{selectedVehicle.model}</p>
@@ -2104,10 +2258,31 @@ const BookingPageContent = () => {
         </div>
 
         <div className="pt-10 border-t border-slate-100 space-y-6">
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Distance</span>
-            <span className="text-sm font-black text-slate-900">{formattedDistance} KM</span>
-          </div>
+          {isLocalMode ? (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package</span>
+              <select
+                value={localPackage}
+                onChange={(e) => setLocalPackage(e.target.value)}
+                className="bg-transparent text-sm font-black text-slate-900 uppercase text-right cursor-pointer outline-none hover:text-emerald-600 transition-colors"
+              >
+                {!(selectedVehicle?.slug.includes("innova") || selectedVehicle?.slug.includes("12-seater") || selectedVehicle?.slug.includes("12seater") || selectedVehicle?.slug.includes("tempo") || selectedVehicle?.slug.includes("traveller") || selectedVehicle?.slug.includes("17") || selectedVehicle?.slug.includes("urbania") || selectedVehicle?.slug.includes("20") || selectedVehicle?.slug.includes("21") || selectedVehicle?.slug.includes("22") || selectedVehicle?.slug.includes("26") || selectedVehicle?.slug.includes("27") || selectedVehicle?.slug.includes("28") || selectedVehicle?.slug.includes("36") || selectedVehicle?.slug.includes("40") || selectedVehicle?.slug.includes("50")) && (
+                  <>
+                    <option>4 Hours / 40 KM</option>
+                    <option>6 Hours / 60 KM</option>
+                    <option>8 Hours / 80 KM</option>
+                  </>
+                )}
+                <option>10 Hours / 100 KM</option>
+                <option>12 Hours / 120 KM</option>
+              </select>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Distance</span>
+              <span className="text-sm font-black text-slate-900">{formattedDistance} KM</span>
+            </div>
+          )}
           {selectedVehicle && (() => {
             const f = calculateFare(Number(selectedVehicle.pricePerKm), selectedVehicle.slug);
             return (
@@ -2116,15 +2291,19 @@ const BookingPageContent = () => {
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vehicle Name</span>
                   <span className="text-sm font-black text-slate-900 uppercase">{selectedVehicle.model}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price per KM</span>
-                  <span className="text-sm font-black text-slate-900">₹{tripType === "one-way" ? getOneWayRate(selectedVehicle.slug, selectedVehicle.model) : selectedVehicle.pricePerKm}/KM</span>
-                </div>
-                {f.bhatta > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Driver Bhatta ({f.days} Day{f.days > 1 ? "s" : ""})</span>
-                    <span className="text-sm font-black text-slate-900">₹{f.bhatta.toLocaleString("en-IN")}</span>
-                  </div>
+                {!isLocalMode && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price per KM</span>
+                      <span className="text-sm font-black text-slate-900">₹{tripType === "one-way" ? getOneWayRate(selectedVehicle.slug, selectedVehicle.model) : selectedVehicle.pricePerKm}/KM</span>
+                    </div>
+                    {f.bhatta > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Driver Bhatta ({f.days} Day{f.days > 1 ? "s" : ""})</span>
+                        <span className="text-sm font-black text-slate-900">₹{f.bhatta.toLocaleString("en-IN")}</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             );
@@ -2132,9 +2311,11 @@ const BookingPageContent = () => {
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trip Type</span>
             <span className="text-sm font-black text-slate-900 uppercase">
-              {isAirportMode
-                ? `Airport (${airportTrip === 'from-airport' ? 'From' : 'To'})`
-                : tripType === 'one-way' ? 'One Way' : 'Round Trip'
+              {isLocalMode
+                ? "Hourly Rentals"
+                : isAirportMode
+                  ? `Airport (${airportTrip === 'from-airport' ? 'From' : 'To'})`
+                  : tripType === 'one-way' ? 'One Way' : 'Round Trip'
               }
             </span>
           </div>
@@ -2162,13 +2343,14 @@ const BookingPageContent = () => {
 *Destination:* ${toSearch}
 *Departure:* ${pickupDate ? new Date(pickupDate).toLocaleString('en-IN') : 'N/A'}
 *Return:* ${returnDate ? new Date(returnDate).toLocaleString('en-IN') : 'N/A'}
-*Trip Type:* ${tripType === 'one-way' ? 'One Way' : 'Round Trip'}
-*Distance:* ~${f.totalKm} KM
+*Trip Type:* ${isLocalMode ? 'Hourly Rentals' : (tripType === 'one-way' ? 'One Way' : 'Round Trip')}
+*Distance / Package:* ${isLocalMode ? localPackage : `~${f.totalKm} KM`}
 
 *PRICING BREAKDOWN:*
-${tripType === "one-way" ? `*One Way Base Fare:* ₹${f.base.toLocaleString()}
+${isLocalMode ? `*Package Base Fare:* ₹${f.base.toLocaleString()}
+*Driver Bhatta:* ₹${f.bhatta.toLocaleString()} (Included)` : (tripType === "one-way" ? `*One Way Base Fare:* ₹${f.base.toLocaleString()}
 *One Way Premium Charge:* ₹1,000` : `*Base Price:* ₹${f.base.toLocaleString()}
-*Driver Bhatta:* ₹${f.bhatta.toLocaleString()} (${f.days} Day${f.days > 1 ? "s" : ""})`}
+*Driver Bhatta:* ₹${f.bhatta.toLocaleString()} (${f.days} Day${f.days > 1 ? "s" : ""})`)}
 *Subtotal:* ₹${f.total.toLocaleString('en-IN')}
 *GST (5%):* ₹${Math.ceil(f.total * 0.05).toLocaleString('en-IN')}
 *Total Estimated Fare:* ₹${(f.total + Math.ceil(f.total * 0.05)).toLocaleString('en-IN')}

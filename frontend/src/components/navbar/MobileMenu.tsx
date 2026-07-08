@@ -161,17 +161,17 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             </nav>
 
             <div className="mt-auto space-y-4">
-              <Button className="w-full h-16 rounded-[2rem] bg-orange-600 hover:bg-orange-700 text-white font-black text-lg shadow-lg shadow-orange-600/20 border-none transition-all active:scale-95">
+              <Button className="w-full h-16 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-black text-lg shadow-lg shadow-orange-600/20 border-none transition-all active:scale-95">
                 <LogIn className="w-5 h-5 mr-2" />
                 Login
               </Button>
-              <Button variant="outline" className="w-full h-16 rounded-[2rem] border-emerald-500/10 text-emerald-950 font-black text-lg hover:bg-emerald-50 transition-all active:scale-95">
+              <Button variant="outline" className="w-full h-16 rounded-2xl border-emerald-500/10 text-emerald-950 font-black text-lg hover:bg-emerald-50 transition-all active:scale-95">
                 <UserPlus className="w-5 h-5 mr-2" />
                 Sign Up
               </Button>
               <Link
                 href="tel:9111989222"
-                className="flex items-center justify-center gap-3 w-full h-16 rounded-[2rem] bg-emerald-500/10 text-emerald-600 font-black text-lg border border-emerald-500/20 transition-all active:scale-95"
+                className="flex items-center justify-center gap-3 w-full h-16 rounded-2xl bg-emerald-500/10 text-emerald-600 font-black text-lg border border-emerald-500/20 transition-all active:scale-95"
               >
                 <Phone className="w-5 h-5" />
                 9111989222

@@ -138,7 +138,7 @@ const HireDriverPage = () => {
                 <motion.div
                   key={i}
                   whileHover={{ y: -12 }}
-                  className="bg-white dark:bg-emerald-950/20 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-emerald-500/10 group transition-all"
+                  className="bg-white dark:bg-emerald-950/20 rounded-[2.5rem] md:rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-emerald-500/10 group transition-all"
                 >
                   <div className="p-8 md:p-10 space-y-6 md:space-y-8">
                     <div className="inline-block px-4 md:px-5 py-1.5 md:py-2 bg-slate-900 text-white text-[9px] md:text-[10px] font-black tracking-[0.2em] rounded-full">

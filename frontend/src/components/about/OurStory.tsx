@@ -64,7 +64,7 @@ const OurStory = () => {
             transition={{ duration: 0.8 }}
             className="flex-1 relative w-full lg:w-auto order-1 lg:order-2"
           >
-            <div className="relative z-10 rounded-[3rem] lg:rounded-[4rem] overflow-hidden shadow-2xl transform hover:rotate-1 transition-transform duration-700 group border border-slate-100 dark:border-emerald-500/10">
+            <div className="relative z-10 rounded-2xl lg:rounded-[4rem] overflow-hidden shadow-2xl transform hover:rotate-1 transition-transform duration-700 group border border-slate-100 dark:border-emerald-500/10">
               <div className="aspect-[4/5] bg-slate-50 dark:bg-emerald-950/20 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/30 via-transparent to-transparent z-10 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <Image
@@ -130,7 +130,7 @@ const OurStory = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.2, duration: 0.6 }}
-              className={`${item.color} border p-12 lg:p-16 rounded-[3rem] space-y-8 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 group relative overflow-hidden`}
+              className={`${item.color} border p-12 lg:p-16 rounded-2xl space-y-8 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 group relative overflow-hidden`}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="p-5 bg-white dark:bg-emerald-900/20 rounded-2xl w-fit shadow-sm border border-slate-100 dark:border-emerald-500/10 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">

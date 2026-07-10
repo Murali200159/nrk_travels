@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
 
 type RequestOptions = {
   method?: string;
@@ -99,7 +99,7 @@ export const createBooking = (data: {
 // Payments (Razorpay)
 // ──────────────────────────────────────────────
 export const createPaymentOrder = (bookingId: string) =>
-  request<{ success: boolean; data: { id: string; amount: number; currency: string } }>(
+  request<{ success: boolean; data: { id: string; amount: number; currency: string; key_id?: string } }>(
     '/payments/create-order',
     { method: 'POST', body: { bookingId } }
   );

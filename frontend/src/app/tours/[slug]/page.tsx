@@ -138,7 +138,7 @@ const TourDetailsPage = () => {
       }
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        key: orderRes.data.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
         amount: orderRes.data.amount,
         currency: orderRes.data.currency,
         name: "Vizag Taxi",

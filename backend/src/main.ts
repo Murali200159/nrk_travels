@@ -1,2 +1,3 @@
 import 'dotenv/config';
-import '../../src/index.js';
+import './index.js';
+

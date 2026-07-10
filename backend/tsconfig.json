@@ -5,6 +5,8 @@
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -21,5 +23,6 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "include": ["src/**/*"]
 }

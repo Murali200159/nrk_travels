@@ -72,7 +72,9 @@ const createOrder = async (bookingId) => {
     throw new ApiError(500, `Failed to update booking with order ID: ${updateError.message}`);
   }
 
-  return order;
+  const orderData = JSON.parse(JSON.stringify(order));
+  orderData.key_id = config.razorpay.key_id;
+  return orderData;
 };
 
 /**

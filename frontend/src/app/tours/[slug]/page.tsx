@@ -43,6 +43,21 @@ const TourDetailsPage = () => {
   const [tripMode, setTripMode] = useState<"one-way" | "round-trip">("round-trip");
   const [activeTab, setActiveTab] = useState<"overview" | "itinerary" | "policy">("overview");
   const [passengerCount, setPassengerCount] = useState(1);
+  const [pickupDate, setPickupDate] = useState<string>(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    return tomorrow.toISOString().slice(0, 16);
+  });
+  const [isEditingDate, setIsEditingDate] = useState(false);
+
+  const getReturnDate = () => {
+    if (!pickupDate || !tour.days) return null;
+    const date = new Date(pickupDate);
+    const daysToAdd = Math.max(0, Number(tour.days) - 1);
+    date.setDate(date.getDate() + daysToAdd);
+    return date;
+  };
 
   React.useEffect(() => {
     if (tour) {
@@ -52,6 +67,11 @@ const TourDetailsPage = () => {
       setTripMode("round-trip");
       setPassengerCount(1);
       setTermsAccepted(false);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(9, 0, 0, 0);
+      setPickupDate(tomorrow.toISOString().slice(0, 16));
+      setIsEditingDate(false);
     }
   }, [tour?.slug]);
 
@@ -122,9 +142,9 @@ const TourDetailsPage = () => {
         actual_total_amount: totalWithGst,
         amount_paid: amountToPay,
         payment_percentage: paymentOption === "part" ? 30 : 100,
-        special_requests: formData.requirements || "",
+        special_requests: `Pickup Date: ${pickupDate ? new Date(pickupDate).toLocaleString('en-IN') : 'N/A'}. Return Date: ${getReturnDate() ? getReturnDate()?.toLocaleString('en-IN') : 'N/A'}. Requirements: ${formData.requirements || "None"}`,
         tour_id: tour.title, // using tour title or slug
-        travel_date: new Date().toISOString().split("T")[0]
+        travel_date: pickupDate ? new Date(pickupDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]
       });
 
       if (!bookingRes.success || !bookingRes.data?.id) {
@@ -211,22 +231,51 @@ const TourDetailsPage = () => {
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup</p>
             <p className="text-sm font-black text-slate-900">Visakhapatnam</p>
           </div>
-          <button className="text-slate-400 hover:text-emerald-600 transition-colors">
-            <Pencil className="w-4 h-4" />
-          </button>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
-          <Calendar className="w-5 h-5" />
+      <div className="flex flex-col gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Date & Time</p>
+            {isEditingDate ? (
+              <input
+                type="datetime-local"
+                value={pickupDate}
+                onChange={(e) => setPickupDate(e.target.value)}
+                className="w-full mt-1 p-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            ) : (
+              <p className="text-sm font-black text-slate-900 truncate">
+                {pickupDate ? new Date(pickupDate).toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => setIsEditingDate(!isEditingDate)}
+            className="text-slate-400 hover:text-emerald-600 transition-colors flex-shrink-0"
+          >
+            {isEditingDate ? (
+              <Check className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <Pencil className="w-4 h-4" />
+            )}
+          </button>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Date</p>
-          <p className="text-sm font-black text-slate-900 truncate">Fri, May 15, 2026 - 9:15 AM</p>
+
+        <div className="flex items-center gap-4 pt-3 border-t border-slate-200/50">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Return Date & Time</p>
+            <p className="text-sm font-black text-slate-900 truncate">
+              {getReturnDate() ? getReturnDate()?.toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+            </p>
+          </div>
         </div>
-        <button className="text-slate-400 hover:text-emerald-600 transition-colors flex-shrink-0">
-          <Pencil className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
@@ -473,14 +522,14 @@ const TourDetailsPage = () => {
                         Visakhapatnam <ChevronRight className="w-4 h-4 text-slate-300" /> {tour.title}
                       </h2>
                       <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
-                        {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} - 10:20 PM
+                        {pickupDate ? new Date(pickupDate).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Select Date'}
                       </p>
                     </div>
                     <button onClick={() => setBookingStep("select")} className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-colors">
                       <Pencil className="w-4 h-4" />
                     </button>
                   </div>
-
+ 
                   {/* Contact Details */}
                   <div className="bg-white rounded-3xl p-8 lg:p-10 border border-slate-100 shadow-sm space-y-8">
                     <div className="flex items-start gap-5">
@@ -492,7 +541,7 @@ const TourDetailsPage = () => {
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Booking details will be sent to</p>
                       </div>
                     </div>
-
+ 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2 md:col-span-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
@@ -502,6 +551,26 @@ const TourDetailsPage = () => {
                           value={formData.fullName}
                           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                           className="w-full h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Date & Time</label>
+                        <input
+                          type="datetime-local"
+                          value={pickupDate}
+                          onChange={(e) => setPickupDate(e.target.value)}
+                          className="w-full h-14 lg:h-16 rounded-2xl bg-slate-50 border border-slate-100 px-6 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Return Date & Time (Calculated)</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={getReturnDate() ? getReturnDate()?.toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                          className="w-full h-14 lg:h-16 rounded-2xl bg-slate-100 border border-slate-100 px-6 text-sm font-bold text-slate-500 outline-none cursor-not-allowed"
                         />
                       </div>
                       <div className="space-y-2">
@@ -857,6 +926,8 @@ const TourDetailsPage = () => {
 *Tour Package:* ${tour.title}
 *Vehicle:* ${selectedVehicle.model}
 *Pickup:* Visakhapatnam
+*Pickup Date:* ${pickupDate ? new Date(pickupDate).toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+*Return Date:* ${getReturnDate() ? getReturnDate()?.toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
 *Duration:* ${tour.duration} (${tour.days} Days)
 
 *PRICING BREAKDOWN:*

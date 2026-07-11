@@ -30,7 +30,7 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
   // Input States
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
-  const [localPackage, setLocalPackage] = useState("8 Hours / 80 KM");
+  const [localPackage, setLocalPackage] = useState("4 Hours / 40 KM");
   const [departureDate, setDepartureDate] = useState(new Date());
   const [returnDate, setReturnDate] = useState(new Date(new Date().getTime() + 86400000));
 
@@ -80,7 +80,7 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
         const actualDrop = airportTrip === "to-airport" ? "Visakhapatnam International Airport" : drop;
         path = `/booking/vizag-airport-transfer?pickup=${encodeURIComponent(actualPickup)}&drop=${encodeURIComponent(actualDrop)}&direction=${airportTrip}&date=${departureDate.toISOString()}`;
       } else if (activeTab === "local") {
-        path = "/booking/local-city-taxi";
+        path = `/booking/local-city-taxi?package=${encodeURIComponent(localPackage)}&date=${departureDate.toISOString()}`;
       }
 
       setTimeout(() => {
@@ -107,6 +107,7 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
       drop: activeTab === "airport" && airportTrip === "to-airport" ? "Visakhapatnam International Airport" : drop,
       package: activeTab === "local" ? localPackage : undefined,
       departureDate: format(departureDate, "MMM dd, yyyy hh:mm a"),
+      // For hourly/local mode, no return date is needed
       returnDate: (activeTab === "outstation" || activeTab === "tour") && tripType === "round-trip" ? format(returnDate, "MMM dd, yyyy hh:mm a") : undefined,
     };
   };
@@ -163,6 +164,8 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
                 onChange={(e) => setLocalPackage(e.target.value)}
                 className="w-full h-14 lg:h-16 bg-slate-50 border border-slate-200 rounded-2xl px-6 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold appearance-none cursor-pointer group-hover:border-emerald-500/20"
               >
+                <option className="bg-white text-slate-900 font-bold">4 Hours / 40 KM</option>
+                <option className="bg-white text-slate-900 font-bold">6 Hours / 60 KM</option>
                 <option className="bg-white text-slate-900 font-bold">8 Hours / 80 KM</option>
                 <option className="bg-white text-slate-900 font-bold">10 Hours / 100 KM</option>
                 <option className="bg-white text-slate-900 font-bold">12 Hours / 120 KM</option>
@@ -173,7 +176,7 @@ const BookingForm = ({ activeTab = "outstation" }: { activeTab?: string }) => {
             </div>
           </div>
           <div className="space-y-3 relative">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 ml-1">Departure</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 ml-1">Start Date &amp; Time</label>
             <div onClick={toggleDepPicker} className="relative group cursor-pointer">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-hover:text-orange-500 transition-colors">
                 <Calendar className="w-5 h-5" />

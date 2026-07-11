@@ -30,18 +30,19 @@ const WhatsAppModal: React.FC<WhatsAppModalProps> = ({ isOpen, onClose, bookingD
     if (!isValid) return;
     setIsSubmitting(true);
 
-    const fullDetails = `
-New Booking Enquiry
--------------------
-Category: ${bookingData.category.toUpperCase()}
-Trip Type: ${bookingData.tripType}
-Pickup: ${bookingData.pickup}
-Drop: ${bookingData.drop || "N/A"}
-Package: ${bookingData.package || "N/A"}
-Departure: ${bookingData.departureDate}
-Return: ${bookingData.returnDate || "N/A"}
-User Phone: +91 ${phoneNumber}
-    `.trim();
+    const isHourly = bookingData.category === 'local';
+    const fullDetails = [
+      `New Booking Enquiry`,
+      `-------------------`,
+      `Category: ${bookingData.category.toUpperCase()}`,
+      `Trip Type: ${isHourly ? 'Hourly Rentals' : bookingData.tripType}`,
+      `Pickup: ${bookingData.pickup}`,
+      bookingData.drop ? `Destination: ${bookingData.drop}` : `Destination: Local City Taxi`,
+      isHourly ? `Start: ${bookingData.departureDate}` : `Departure: ${bookingData.departureDate}`,
+      ...((!isHourly && bookingData.returnDate) ? [`Return: ${bookingData.returnDate}`] : []),
+      bookingData.package ? `Package: ${bookingData.package}` : null,
+      `User Phone: +91 ${phoneNumber}`,
+    ].filter(Boolean).join('\n');
 
     try {
       // Sending to Gmail automatically using Web3Forms (No backend required)

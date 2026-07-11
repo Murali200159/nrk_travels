@@ -1210,7 +1210,9 @@ const BookingPageContent = () => {
 
           {/* Departure Date */}
           <div className="lg:col-span-3 space-y-3 relative">
-            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">Departure</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
+              {isLocalMode ? "Start Date & Time" : "Departure"}
+            </label>
             <div className="relative group">
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 pointer-events-none" />
               <input
@@ -2341,9 +2343,8 @@ const BookingPageContent = () => {
 *Vehicle:* ${selectedVehicle.model} (${selectedVehicle.type})
 *Pickup:* ${fromSearch}
 *Destination:* ${toSearch}
-*Departure:* ${pickupDate ? new Date(pickupDate).toLocaleString('en-IN') : 'N/A'}
-*Return:* ${returnDate ? new Date(returnDate).toLocaleString('en-IN') : 'N/A'}
-*Trip Type:* ${isLocalMode ? 'Hourly Rentals' : (tripType === 'one-way' ? 'One Way' : 'Round Trip')}
+*${isLocalMode ? 'Start' : 'Departure'}:* ${pickupDate ? new Date(pickupDate).toLocaleString('en-IN') : 'N/A'}
+${isLocalMode ? '' : `*Return:* ${returnDate ? new Date(returnDate).toLocaleString('en-IN') : 'N/A'}\n`}*Trip Type:* ${isLocalMode ? 'Hourly Rentals' : (tripType === 'one-way' ? 'One Way' : 'Round Trip')}
 *Distance / Package:* ${isLocalMode ? localPackage : `~${f.totalKm} KM`}
 
 *PRICING BREAKDOWN:*

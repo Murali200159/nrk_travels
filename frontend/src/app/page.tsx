@@ -16,6 +16,7 @@ import TrustSection from "@/components/about/TrustSection";
 import CTASection from "@/components/about/CTASection";
 import TestimonialsSection from "@/components/testimonials/TestimonialsSection";
 import SocialSection from "@/components/social/SocialSection";
+import HourlySection from "@/components/tours/HourlySection";
 import { SectionReveal } from "@/components/ui/SectionReveal";
 
 export default function Home() {
@@ -30,6 +31,9 @@ export default function Home() {
       </SectionReveal>
       <SectionReveal>
         <OutstationSection />
+      </SectionReveal>
+      <SectionReveal>
+        <HourlySection />
       </SectionReveal>
       <SectionReveal>
         <TempoSection />

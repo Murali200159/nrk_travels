@@ -52,8 +52,22 @@ const TourDetailsPage = () => {
   const [isEditingDate, setIsEditingDate] = useState(false);
 
   const getReturnDate = () => {
-    if (!pickupDate || !tour.days) return null;
+    if (!pickupDate || !tour) return null;
     const date = new Date(pickupDate);
+    
+    // Check if duration contains "Hours"
+    const durationStr = (tour.duration || "").toLowerCase();
+    if (durationStr.includes("hours")) {
+      const match = durationStr.match(/(\d+)\s*hours?/);
+      if (match) {
+        const hoursToAdd = parseInt(match[1], 10);
+        date.setHours(date.getHours() + hoursToAdd);
+        return date;
+      }
+    }
+    
+    // Fallback: use days
+    if (!tour.days) return null;
     const daysToAdd = Math.max(0, Number(tour.days) - 1);
     date.setDate(date.getDate() + daysToAdd);
     return date;

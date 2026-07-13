@@ -17,7 +17,7 @@ try {
  * @param {string} body - Text message body
  */
 const sendWhatsApp = async (to, body) => {
-  if (!twilioClient || !config.twilio.phoneNumber) {
+  if (!twilioClient || !twilioClient.messages || !config.twilio || !config.twilio.phoneNumber) {
     console.warn(`[MOCK WhatsApp] To: ${to} | Body:\n${body}`);
     return true; // Mock success if not configured
   }

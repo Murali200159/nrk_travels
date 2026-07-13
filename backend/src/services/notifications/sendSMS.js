@@ -17,7 +17,7 @@ try {
  * @param {string} body - Text message body
  */
 const sendSMS = async (to, body) => {
-  if (!twilioClient || !config.twilio.phoneNumber) {
+  if (!twilioClient || !twilioClient.messages || !config.twilio || !config.twilio.phoneNumber) {
     console.warn(`[MOCK SMS] To: ${to} | Body: ${body}`);
     return true; // Return true to mock success in dev
   }

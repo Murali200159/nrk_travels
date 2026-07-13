@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${syne.variable} font-jakarta antialiased bg-white text-slate-900 transition-colors duration-500`}>
         <Providers>
           <ScrollToTop />
